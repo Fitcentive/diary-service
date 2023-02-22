@@ -3,5 +3,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /count                      io.fitcentive.user.controllers.CountController.count
-GET     /message                    io.fitcentive.user.controllers.AsyncController.message
+GET      /api/user/health                                                                       io.fitcentive.diary.controllers.HealthController.livenessProbe
+GET      /api/user/healthz                                                                      io.fitcentive.diary.controllers.HealthController.readinessProbe
+
+# User endpoints
+GET      /api/diary/exercise                                                                    io.fitcentive.diary.controllers.ExerciseController.getAllExerciseInfo

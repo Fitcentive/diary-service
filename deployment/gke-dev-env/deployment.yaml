@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: diary
+  name: diary-service
+  labels:
+    app: diary-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: diary-service
+  template:
+    metadata:
+      labels:
+        app: diary-service
+    spec:
+      containers:
+        # Sidecar container for cloudsql-proxy to connect to CloudSql database - recommended approach by Google for GKE
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.33.1
+          command:
+            - /cloud_sql_proxy
+            - -instances=fitcentive-dev:northamerica-northeast2:gke-dev-env-cloud-sql-instance:=tcp:5432
+            - -credential_file=/secrets/cloudsql/credentials.json
+          volumeMounts:
+            - name: cloudsql-creds
+              mountPath: /secrets/cloudsql
+              readOnly: true
+        - name: diary-service
+          image: gcr.io/fitcentive-dev/diary:1.0
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 300Mi
+              cpu: "0.3"
+            limits:
+              memory: 500Mi
+              cpu: "0.5"
+          ports:
+            - name: http-port
+              containerPort: 9000
+          readinessProbe:
+            httpGet:
+              path: /api/diary/healthz
+              port: 9000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /api/diary/health
+              port: 9000
+            initialDelaySeconds: 120
+            periodSeconds: 15
+          envFrom:
+            - secretRef:
+                name: internal-service-secret
+            - secretRef:
+                name: image-service-secret
+            - secretRef:
+                name: diary-service-cloudsql-database-credentials
+          env:
+            - name: GCP_PROJECT_NAME
+              value: "fitcentive-dev"
+            - name: DB_HOST
+              value: "localhost"
+            - name: DB_PORT
+              value: "5432"
+            - name: AUTH_SERVICE_HOST
+              value: "http://auth-service.auth"
+            - name: AUTH_SERVICE_PORT
+              value: "9000"
+            - name: SOCIAL_SERVICE_HOST
+              value: "http://social-service.social"
+            - name: SOCIAL_SERVICE_PORT
+              value: "9000"
+            - name: DISCOVER_SERVICE_HOST
+              value: "http://discover-service.discover"
+            - name: DISCOVER_SERVICE_PORT
+              value: "9000"
+            - name: NOTIFICATION_SERVICE_HOST
+              value: "http://notification-service.notification"
+            - name: NOTIFICATION_SERVICE_PORT
+              value: "9000"
+            - name: CHAT_SERVICE_HOST
+              value: "http://chat-service.chat"
+            - name: CHAT_SERVICE_PORT
+              value: "4000"
+            - name: IMAGE_SERVICE_HOST
+              value: "http://image-service.image-service"
+            - name: IMAGE_SERVICE_PORT
+              value: "10260"
+            - name: JWT_ISSUER
+              value: "https://auth.fitcentive.xyz"
+            - name: KEYCLOAK_SERVER_URL
+              value: "http://keycloak-service-http.keycloak/auth"
+            - name: TOPIC_USER_FOLLOW_REQUESTED
+              value: "user-follow-requested"
+            - name: TOPIC_USER_FOLLOW_REQUEST_DECISION
+              value: "user-follow-request-decision"
+            - name: TOPIC_EMAIL_VERIFICATION_TOKEN_CREATED
+              value: "email-verification-token-created"
+            - name: TOPIC_CLEAR_USERNAME_LOCK_TABLE
+              value: "clear-username-lock-table"
+            - name: SUBSCRIPTION_CLEAR_USERNAME_LOCK_TABLE
+              value: "clear-username-lock-table"
+            - name: RUNTIME_ENVIRONMENT
+              value: "gke-dev-env"
+            - name: USER_IMAGE_UPLOAD_BUCKET
+              value: "image-service-upload-images"
+            - name: DELETED_USER_STATIC_ID
+              value: "aaaaaaaa-aaaa-8bbb-8bbb-aaaaaaaaaaaa"
+            - name: DELETED_USER_STATIC_EMAIL
+              value: "deleted.user@fitcentive.io"
+            - name: WGER_HOST
+              value: "https://wger.de"
+            - name: WGER_API_VERSION
+              value: "/api/v2"
+      volumes:
+        - name: cloudsql-creds
+          secret:
+            secretName: diary-service-cloudsql-instance-credentials
+

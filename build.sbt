@@ -1,8 +1,8 @@
-name := "user"
+name := "diary"
 
 version := "1.0"
 
-lazy val `notification` = (project in file("."))
+lazy val `diary` = (project in file("."))
   .enablePlugins(PlayScala)
   .disablePlugins(PlayLogback)
 
@@ -15,11 +15,12 @@ libraryDependencies ++= Seq(
   ehcache,
   ws,
   evolutions,
-
+  // Neo4j
+  "org.neo4j.driver"    % "neo4j-java-driver" % "4.4.7",
+  "io.github.neotypes" %% "neotypes-core"     % "0.21.0",
   // Anorm
-  "org.playframework.anorm" %% "anorm" % "2.6.10",
+  "org.playframework.anorm" %% "anorm"          % "2.6.10",
   "org.playframework.anorm" %% "anorm-postgres" % "2.6.10",
-
   //Cats
   "org.typelevel" %% "cats-core"   % "2.7.0",
   "org.typelevel" %% "cats-effect" % "3.3.4",
@@ -32,7 +33,10 @@ libraryDependencies ++= Seq(
   //Logging
   "ch.qos.logback"       % "logback-classic"          % "1.3.0-alpha10",
   "net.logstash.logback" % "logstash-logback-encoder" % "7.0.1",
-  specs2                 % Test,
+  // Image support
+  "org.apache.xmlgraphics" % "batik-transcoder" % "1.14",
+  "org.apache.xmlgraphics" % "batik-codec"      % "1.14",
+  specs2                   % Test,
   guice
 )
 
