@@ -94,24 +94,8 @@ spec:
               value: "https://auth.fitcentive.xyz"
             - name: KEYCLOAK_SERVER_URL
               value: "http://keycloak-service-http.keycloak/auth"
-            - name: TOPIC_USER_FOLLOW_REQUESTED
-              value: "user-follow-requested"
-            - name: TOPIC_USER_FOLLOW_REQUEST_DECISION
-              value: "user-follow-request-decision"
-            - name: TOPIC_EMAIL_VERIFICATION_TOKEN_CREATED
-              value: "email-verification-token-created"
-            - name: TOPIC_CLEAR_USERNAME_LOCK_TABLE
-              value: "clear-username-lock-table"
-            - name: SUBSCRIPTION_CLEAR_USERNAME_LOCK_TABLE
-              value: "clear-username-lock-table"
             - name: RUNTIME_ENVIRONMENT
               value: "gke-dev-env"
-            - name: USER_IMAGE_UPLOAD_BUCKET
-              value: "image-service-upload-images"
-            - name: DELETED_USER_STATIC_ID
-              value: "aaaaaaaa-aaaa-8bbb-8bbb-aaaaaaaaaaaa"
-            - name: DELETED_USER_STATIC_EMAIL
-              value: "deleted.user@fitcentive.io"
             - name: WGER_HOST
               value: "https://wger.de"
             - name: WGER_API_VERSION
