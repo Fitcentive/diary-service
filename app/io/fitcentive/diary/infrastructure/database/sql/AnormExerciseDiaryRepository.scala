@@ -82,11 +82,8 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
     }
 }
 
-//ARRAY['$attributeGroupId'::uuid]
-// todo - method to delete diary entries
 object AnormExerciseDiaryRepository extends AnormOps {
 
-  // todo - weightsInLbs is untested
   private val SQL_INSERT_AND_RETURN_STRENGTH_WORKOUT: String =
     """
       |insert into strength_workout (id, user_id, workout_id, name, exercise_date, sets, reps, weights_in_lbs, calories_burned, meetup_id, created_at, updated_at)
@@ -123,9 +120,9 @@ object AnormExerciseDiaryRepository extends AnormOps {
     workout_id: UUID,
     name: String,
     exercise_date: Instant,
-    sets: Option[Long],
-    reps: Option[Long],
-    weights_in_lbs: Seq[Long],
+    sets: Option[Int],
+    reps: Option[Int],
+    weights_in_lbs: List[Int],
     calories_burned: Option[Double],
     meetup_id: Option[UUID],
     created_at: Instant,
@@ -154,7 +151,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
     workout_id: UUID,
     name: String,
     cardio_date: Instant,
-    duration_in_minutes: Option[Long],
+    duration_in_minutes: Option[Int],
     calories_burned: Option[Double],
     meetup_id: Option[UUID],
     created_at: Instant,

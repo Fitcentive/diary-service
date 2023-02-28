@@ -11,7 +11,7 @@ case class CardioWorkout(
   workoutId: UUID,
   name: String,
   cardioDate: Instant,
-  durationInMinutes: Option[Long],
+  durationInMinutes: Option[Int],
   caloriesBurned: Option[Double],
   meetupId: Option[UUID],
   createdAt: Instant,
