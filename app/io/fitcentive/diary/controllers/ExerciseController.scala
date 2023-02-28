@@ -23,7 +23,7 @@ class ExerciseController @Inject() (
   with ServerErrorHandler {
 
   // -----------------------------
-  // Unauthenticated routes
+  // User Auth routes
   // -----------------------------
   def getAllExerciseInfo: Action[AnyContent] =
     userAuthAction.async { implicit userRequest =>

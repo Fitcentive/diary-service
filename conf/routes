@@ -6,5 +6,13 @@
 GET      /api/diary/health                                                                       io.fitcentive.diary.controllers.HealthController.livenessProbe
 GET      /api/diary/healthz                                                                      io.fitcentive.diary.controllers.HealthController.readinessProbe
 
-# User endpoints
+# Exercise endpoints
 GET      /api/diary/exercise                                                                    io.fitcentive.diary.controllers.ExerciseController.getAllExerciseInfo
+
+# Cardio workout endpoints
+POST     /api/diary/user/:userId/cardio                                                         io.fitcentive.diary.controllers.DiaryController.addCardioEntryToDiary(userId: java.util.UUID)
+GET      /api/diary/user/:userId/date/:dateString/cardio                                        io.fitcentive.diary.controllers.DiaryController.getAllCardioWorkoutsForUserByDay(userId: java.util.UUID, dateString: String)
+
+# Strength workout endpoints
+POST     /api/diary/user/:userId/strength                                                       io.fitcentive.diary.controllers.DiaryController.addStrengthEntryToDiary(userId: java.util.UUID)
+GET      /api/diary/user/:userId/date/:dateString/strength                                      io.fitcentive.diary.controllers.DiaryController.getAllStrengthWorkoutsForUserByDay(userId: java.util.UUID, dateString: String)
