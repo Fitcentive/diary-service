@@ -9,7 +9,7 @@ import io.fitcentive.diary.repositories.ExerciseDiaryRepository
 import play.api.db.Database
 
 import java.time.Instant
-import java.util.UUID
+import java.util.{Date, UUID}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 import scala.util.chaining.scalaUtilChainingOps
@@ -23,7 +23,7 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
 
   override def getAllCardioWorkoutsForDayByUser(userId: UUID, day: Instant): Future[Seq[CardioWorkout]] =
     Future {
-      getRecords(SQL_GET_CARDIO_WORKOUTS_FOR_USER_BY_DATE, "userId" -> userId, "cardioDate" -> day)(
+      getRecords(SQL_GET_CARDIO_WORKOUTS_FOR_USER_BY_DATE, "userId" -> userId, "cardioDate" -> Date.from(day))(
         cardioWorkoutRowParser
       ).map(_.toDomain)
     }
@@ -50,7 +50,7 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
 
   override def getAllStrengthWorkoutsForDayByUser(userId: UUID, day: Instant): Future[Seq[StrengthWorkout]] =
     Future {
-      getRecords(SQL_GET_STRENGTH_WORKOUTS_FOR_USER_BY_DATE, "userId" -> userId, "exerciseDate" -> day)(
+      getRecords(SQL_GET_STRENGTH_WORKOUTS_FOR_USER_BY_DATE, "userId" -> userId, "exerciseDate" -> Date.from(day))(
         strengthWorkoutRowParser
       ).map(_.toDomain)
     }
@@ -106,7 +106,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |select * 
       |from strength_workouts
       |where user_id = {userId}::uuid
-      |and exercise_date = {exerciseDate} ;
+      |and exercise_date::date = {exerciseDate}::date ;
       |""".stripMargin
 
   private val SQL_INSERT_AND_RETURN_CARDIO_WORKOUT: String =
@@ -121,7 +121,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |select * 
       |from cardio_workouts
       |where user_id = {userId}::uuid
-      |and cardio_date = {cardioDate} ;
+      |and cardio_date::date = {cardioDate}::date ;
       |""".stripMargin
 
   private case class StrengthWorkoutRow(
