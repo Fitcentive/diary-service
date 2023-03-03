@@ -8,7 +8,7 @@ import io.fitcentive.sdk.utils.PlayControllerOps
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import java.time.Instant
+import java.time.{Instant, LocalDate, ZoneOffset}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -55,7 +55,7 @@ class DiaryController @Inject() (
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
         diaryApi
-          .getCardioEntriesForUserByDay(userId, Instant.parse(dateString))
+          .getCardioEntriesForUserByDay(userId, LocalDate.parse(dateString).atStartOfDay().toInstant(ZoneOffset.UTC))
           .map(cardio => Ok(Json.toJson(cardio)))
           .recover(resultErrorAsyncHandler)
       }
@@ -65,7 +65,7 @@ class DiaryController @Inject() (
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
         diaryApi
-          .getStrengthEntriesForUserByDay(userId, Instant.parse(dateString))
+          .getStrengthEntriesForUserByDay(userId, LocalDate.parse(dateString).atStartOfDay().toInstant(ZoneOffset.UTC))
           .map(cardio => Ok(Json.toJson(cardio)))
           .recover(resultErrorAsyncHandler)
       }
