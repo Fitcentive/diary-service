@@ -63,7 +63,7 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
     Future {
       Instant.now.pipe { now =>
         executeSqlWithExpectedReturn[StrengthWorkoutRow](
-          SQL_INSERT_AND_RETURN_STRENGTH_WORKOUT,
+          SQL_INSERT_AND_RETURN_STRENGTH_WORKOUT(create.weightsInLbs),
           Seq(
             "id" -> id,
             "userId" -> userId,
@@ -72,7 +72,6 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
             "exerciseDate" -> create.exerciseDate,
             "sets" -> create.sets,
             "reps" -> create.reps,
-            "weightsInLbs" -> create.reps,
             "caloriesBurned" -> create.caloriesBurned,
             "meetupId" -> create.meetupId,
             "now" -> now
@@ -84,10 +83,21 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
 
 object AnormExerciseDiaryRepository extends AnormOps {
 
-  private val SQL_INSERT_AND_RETURN_STRENGTH_WORKOUT: String =
-    """
-      |insert into strength_workout (id, user_id, workout_id, name, exercise_date, sets, reps, weights_in_lbs, calories_burned, meetup_id, created_at, updated_at)
-      |values ({id}::uuid, {userId}::uuid, {workoutId}::uuid, {name}, {exerciseDate}, {set}, {reps}, {weightsInLbs}, {caloriesBurned}, {meetupId}, {now}, {now})
+  private def transformWeightsIntoSqlArray(weightsInLbs: Seq[Long]): String = {
+    if (weightsInLbs.nonEmpty) {
+      weightsInLbs.foldLeft("ARRAY[")((acc, w) => acc + s"'$w'::uuid,").dropRight(1) + "]"
+    } else {
+      "ARRAY[".concat("]::integer[]")
+    }
+
+  }
+
+  private def SQL_INSERT_AND_RETURN_STRENGTH_WORKOUT(weightsInLbs: Seq[Long]): String =
+    s"""
+      |insert into strength_workouts (id, user_id, workout_id, name, exercise_date, sets, reps, weight_in_lbs, calories_burned, meetup_id, created_at, updated_at)
+      |values ({id}::uuid, {userId}::uuid, {workoutId}::uuid, {name}, {exerciseDate}, {sets}, {reps}, ${transformWeightsIntoSqlArray(
+      weightsInLbs
+    )}, {caloriesBurned}, {meetupId}::uuid, {now}, {now})
       |returning *;
       |""".stripMargin
 
@@ -101,8 +111,8 @@ object AnormExerciseDiaryRepository extends AnormOps {
 
   private val SQL_INSERT_AND_RETURN_CARDIO_WORKOUT: String =
     """
-      |insert into strength_workout (id, user_id, workout_id, name, cardio_date, duration_in_minutes, calories_burned, meetup_id, created_at, updated_at)
-      |values ({id}::uuid, {userId}::uuid, {workoutId}::uuid, {name}, {cardioDate}, {durationInMinutes}, {caloriesBurned}, {meetupId}, {now}, {now})
+      |insert into cardio_workouts (id, user_id, workout_id, name, cardio_date, duration_in_minutes, calories_burned, meetup_id, created_at, updated_at)
+      |values ({id}::uuid, {userId}::uuid, {workoutId}::uuid, {name}, {cardioDate}, {durationInMinutes}, {caloriesBurned}, {meetupId}::uuid, {now}, {now})
       |returning *;
       |""".stripMargin
 
@@ -122,7 +132,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
     exercise_date: Instant,
     sets: Option[Int],
     reps: Option[Int],
-    weights_in_lbs: List[Int],
+    weight_in_lbs: List[Int],
     calories_burned: Option[Double],
     meetup_id: Option[UUID],
     created_at: Instant,
@@ -137,7 +147,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
         exerciseDate = exercise_date,
         sets = sets,
         reps = reps,
-        weightsInLbs = weights_in_lbs,
+        weightsInLbs = weight_in_lbs,
         caloriesBurned = calories_burned,
         meetupId = meetup_id,
         createdAt = created_at,
