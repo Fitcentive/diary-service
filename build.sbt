@@ -12,9 +12,9 @@ scalaVersion := "2.13.5"
 
 libraryDependencies ++= Seq(
   jdbc,
-  ehcache,
   ws,
   evolutions,
+  caffeine,
   // Neo4j
   "org.neo4j.driver"    % "neo4j-java-driver" % "4.4.7",
   "io.github.neotypes" %% "neotypes-core"     % "0.21.0",

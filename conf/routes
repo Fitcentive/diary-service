@@ -3,8 +3,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET      /api/diary/health                                                                       io.fitcentive.diary.controllers.HealthController.livenessProbe
-GET      /api/diary/healthz                                                                      io.fitcentive.diary.controllers.HealthController.readinessProbe
+GET      /api/diary/health                                                                      io.fitcentive.diary.controllers.HealthController.livenessProbe
+GET      /api/diary/healthz                                                                     io.fitcentive.diary.controllers.HealthController.readinessProbe
 
 # Exercise endpoints
 GET      /api/diary/exercise                                                                    io.fitcentive.diary.controllers.ExerciseController.getAllExerciseInfo
@@ -16,3 +16,7 @@ GET      /api/diary/user/:userId/date/:dateString/cardio                        
 # Strength workout endpoints
 POST     /api/diary/user/:userId/strength                                                       io.fitcentive.diary.controllers.DiaryController.addStrengthEntryToDiary(userId: java.util.UUID)
 GET      /api/diary/user/:userId/date/:dateString/strength                                      io.fitcentive.diary.controllers.DiaryController.getAllStrengthWorkoutsForUserByDay(userId: java.util.UUID, dateString: String)
+
+# Nutrition endpoints
+GET      /api/diary/food/search                                                                 io.fitcentive.diary.controllers.NutritionController.searchFoodsByExpression(query: String, pageNumber: Option[Int] = None, maxResults: Option[Int] = None)
+GET      /api/diary/food/:foodId                                                                io.fitcentive.diary.controllers.NutritionController.getFoodById(foodId: String)

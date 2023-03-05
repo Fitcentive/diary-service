@@ -59,6 +59,8 @@ spec:
                 name: image-service-secret
             - secretRef:
                 name: diary-service-cloudsql-database-credentials
+            - secretRef:
+                name: diary-service-fatsecret-credentials
           env:
             - name: GCP_PROJECT_NAME
               value: "fitcentive-dev"

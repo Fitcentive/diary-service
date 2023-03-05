@@ -21,6 +21,8 @@ trait ServerErrorHandler extends DomainErrorHandler with AppLogger {
     case EntityNotFoundError(reason)    => NotFound(reason)
     case EntityConflictError(reason)    => Conflict(reason)
     case EntityNotAccessible(reason)    => Forbidden(reason)
+    case WgerApiError(reason)           => BadRequest(reason)
+    case FatsecretApiError(reason)      => BadRequest(reason)
     case _                              => InternalServerError("Unexpected error occurred ")
   }
 

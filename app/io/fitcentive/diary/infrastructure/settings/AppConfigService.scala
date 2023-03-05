@@ -2,7 +2,7 @@ package io.fitcentive.diary.infrastructure.settings
 
 import com.typesafe.config.Config
 import io.fitcentive.sdk.config.{GcpConfig, JwtConfig, SecretConfig, ServerConfig}
-import io.fitcentive.diary.domain.config.{EnvironmentConfig, WgerApiConfig}
+import io.fitcentive.diary.domain.config.{EnvironmentConfig, FatsecretApiConfig, WgerApiConfig}
 import io.fitcentive.diary.services.SettingsService
 import play.api.Configuration
 
@@ -10,6 +10,8 @@ import javax.inject.{Inject, Singleton}
 
 @Singleton
 class AppConfigService @Inject() (config: Configuration) extends SettingsService {
+
+  override def fatsecretApiConfig: FatsecretApiConfig = FatsecretApiConfig.fromConfig(config.get[Config]("fatsecret"))
 
   override def exerciseApiConfig: WgerApiConfig = WgerApiConfig.fromConfig(config.get[Config]("wger"))
 
