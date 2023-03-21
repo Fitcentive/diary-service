@@ -1,6 +1,6 @@
 package io.fitcentive.diary.api
 
-import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodSearchResults}
+import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodGetResultSingleServing, FoodSearchResults}
 import io.fitcentive.diary.infrastructure.rest.RestFatsecretApiService
 import io.fitcentive.diary.services.NutritionService
 import io.fitcentive.sdk.error.DomainError
@@ -22,7 +22,7 @@ class NutritionApi @Inject() (nutritionService: NutritionService)(implicit ec: E
       maxResults.fold(RestFatsecretApiService.defaultMax)(identity)
     )
 
-  def getFoodById(foodId: String): Future[Either[DomainError, FoodGetResult]] =
+  def getFoodById(foodId: String): Future[Either[DomainError, Either[FoodGetResult, FoodGetResultSingleServing]]] =
     nutritionService.getFoodById(foodId)
 
 }

@@ -36,7 +36,10 @@ class NutritionController @Inject() (
     userAuthAction.async { implicit request =>
       nutritionApi
         .getFoodById(foodId)
-        .map(handleEitherResult(_)(user => Ok(Json.toJson(user))))
+        .map(handleEitherResult(_) {
+          case Left(value)  => Ok(Json.toJson(value))
+          case Right(value) => Ok(Json.toJson(value))
+        })
         .recover(resultErrorAsyncHandler)
     }
 

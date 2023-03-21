@@ -9,16 +9,40 @@ object FoodGetResult {
   implicit lazy val format: OFormat[FoodGetResult] = Json.format[FoodGetResult]
 }
 
+case class FoodGetResultSingleServing(food: FoodResultSingleServing)
+object FoodGetResultSingleServing {
+  implicit val config = JsonConfiguration(SnakeCase)
+  implicit lazy val format: OFormat[FoodGetResultSingleServing] = Json.format[FoodGetResultSingleServing]
+}
+
 case class FoodResult(foodId: String, foodName: String, foodType: String, foodUrl: String, servings: Servings)
 object FoodResult {
   implicit val config = JsonConfiguration(SnakeCase)
   implicit lazy val format: OFormat[FoodResult] = Json.format[FoodResult]
 }
 
+case class FoodResultSingleServing(
+  foodId: String,
+  foodName: String,
+  foodType: String,
+  foodUrl: String,
+  servings: SingleServing
+)
+object FoodResultSingleServing {
+  implicit val config = JsonConfiguration(SnakeCase)
+  implicit lazy val format: OFormat[FoodResultSingleServing] = Json.format[FoodResultSingleServing]
+}
+
 case class Servings(serving: Seq[Serving])
 object Servings {
   implicit val config = JsonConfiguration(SnakeCase)
   implicit lazy val format: OFormat[Servings] = Json.format[Servings]
+}
+
+case class SingleServing(serving: Serving)
+object SingleServing {
+  implicit val config = JsonConfiguration(SnakeCase)
+  implicit lazy val format: OFormat[SingleServing] = Json.format[SingleServing]
 }
 
 case class Serving(

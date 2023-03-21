@@ -1,7 +1,7 @@
 package io.fitcentive.diary.services
 
 import com.google.inject.ImplementedBy
-import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodSearchResults}
+import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodGetResultSingleServing, FoodSearchResults}
 import io.fitcentive.diary.infrastructure.rest.RestFatsecretApiService
 import io.fitcentive.sdk.error.DomainError
 
@@ -14,6 +14,6 @@ trait NutritionService {
     pageNumber: Int = 0,
     maxResults: Int = RestFatsecretApiService.defaultMax
   ): Future[Either[DomainError, FoodSearchResults]]
-  def getFoodById(foodId: String): Future[Either[DomainError, FoodGetResult]]
+  def getFoodById(foodId: String): Future[Either[DomainError, Either[FoodGetResult, FoodGetResultSingleServing]]]
   def getAuthToken: Future[Either[DomainError, String]]
 }

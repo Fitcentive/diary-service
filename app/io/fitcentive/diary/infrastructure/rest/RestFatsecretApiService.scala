@@ -4,7 +4,7 @@ import play.api.http.Status
 import play.api.libs.ws.{EmptyBody, WSAuthScheme, WSClient}
 import io.fitcentive.diary.domain.config.FatsecretApiConfig
 import io.fitcentive.diary.domain.errors.FatsecretApiError
-import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodSearchResults}
+import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodGetResultSingleServing, FoodSearchResults}
 import io.fitcentive.diary.services.{NutritionService, SettingsService}
 import io.fitcentive.sdk.error.DomainError
 import play.api.cache.AsyncCacheApi
@@ -66,7 +66,9 @@ class RestFatsecretApiService @Inject() (wsClient: WSClient, cache: AsyncCacheAp
           .getOrElse(Future.successful(Left(FatsecretApiError(s"Unexpected response from Fatsecret Auth API"))))
       }
 
-  override def getFoodById(foodId: String): Future[Either[DomainError, FoodGetResult]] =
+  override def getFoodById(
+    foodId: String
+  ): Future[Either[DomainError, Either[FoodGetResult, FoodGetResultSingleServing]]] =
     cache
       .getOrElseUpdate(fatsecretConfig.authTokenCacheKey, fatsecretConfig.authTokenCacheDuration) {
         getAuthToken
@@ -84,12 +86,17 @@ class RestFatsecretApiService @Inject() (wsClient: WSClient, cache: AsyncCacheAp
                   case Status.OK =>
                     Try(response.json.as[FoodGetResult]) match {
                       case Failure(e) =>
-                        Left(
-                          FatsecretApiError(
-                            s"An error occurred while parsing JSON result:\n Result: ${response.json}\n Error: $e"
-                          )
-                        )
-                      case Success(value) => Right(value)
+                        Try(response.json.as[FoodGetResultSingleServing]) match {
+                          case Failure(exception) =>
+                            Left(
+                              FatsecretApiError(
+                                s"An error occurred while parsing JSON result:\n Result: ${response.json}\n Error: $exception"
+                              )
+                            )
+                          case Success(value) => Right(Right(value))
+                        }
+
+                      case Success(value) => Right(Left(value))
                     }
                   case status => Left(FatsecretApiError(s"Unexpected status from Fatsecret API: $status"))
                 }
