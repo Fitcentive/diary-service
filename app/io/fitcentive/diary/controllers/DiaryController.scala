@@ -2,6 +2,7 @@ package io.fitcentive.diary.controllers
 
 import io.fitcentive.diary.api.{DiaryApi, ExerciseApi}
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
+import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.infrastructure.utils.ServerErrorHandler
 import io.fitcentive.sdk.play.{InternalAuthAction, UserAuthAction}
 import io.fitcentive.sdk.utils.PlayControllerOps
@@ -24,9 +25,9 @@ class DiaryController @Inject() (
   with PlayControllerOps
   with ServerErrorHandler {
 
-  // -----------------------------
-  // User Auth routes
-  // -----------------------------
+  // --------------------------------
+  // Exercise Diary API methods
+  // --------------------------------
   def addCardioEntryToDiary(implicit userId: UUID): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
@@ -71,4 +72,28 @@ class DiaryController @Inject() (
       }
     }
 
+  // --------------------------------
+  // Food Diary API methods
+  // --------------------------------
+  def getAllFoodEntriesForUserByDay(implicit userId: UUID, dateString: String): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getFoodEntriesForUserByDay(userId, LocalDate.parse(dateString).atStartOfDay().toInstant(ZoneOffset.UTC))
+          .map(foods => Ok(Json.toJson(foods)))
+          .recover(resultErrorAsyncHandler)
+      }
+    }
+
+  def addFoodEntryToDiary(implicit userId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        validateJson[FoodEntry.Create](request.body.asJson) { createPayload =>
+          diaryApi
+            .insertFoodDiaryEntry(userId, createPayload)
+            .map(cardio => Ok(Json.toJson(cardio)))
+            .recover(resultErrorAsyncHandler)
+        }
+      }
+    }
 }

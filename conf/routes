@@ -17,6 +17,10 @@ GET      /api/diary/user/:userId/date/:dateString/cardio                        
 POST     /api/diary/user/:userId/strength                                                       io.fitcentive.diary.controllers.DiaryController.addStrengthEntryToDiary(userId: java.util.UUID)
 GET      /api/diary/user/:userId/date/:dateString/strength                                      io.fitcentive.diary.controllers.DiaryController.getAllStrengthWorkoutsForUserByDay(userId: java.util.UUID, dateString: String)
 
+# Food entry endpoints
+POST     /api/diary/user/:userId/food                                                           io.fitcentive.diary.controllers.DiaryController.addFoodEntryToDiary(userId: java.util.UUID)
+GET      /api/diary/user/:userId/date/:dateString/food                                          io.fitcentive.diary.controllers.DiaryController.getAllFoodEntriesForUserByDay(userId: java.util.UUID, dateString: String)
+
 # Nutrition endpoints
 GET      /api/diary/food/search                                                                 io.fitcentive.diary.controllers.NutritionController.searchFoodsByExpression(query: String, pageNumber: Option[Int] ?= None, maxResults: Option[Int] ?= None)
 GET      /api/diary/food/:foodId                                                                io.fitcentive.diary.controllers.NutritionController.getFoodById(foodId: String)
