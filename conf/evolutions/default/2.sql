@@ -6,10 +6,10 @@ create table meal_entry_types (
     description varchar not null
 );
 
-insert into account_status_types (name, description) values ('Breakfast', 'First meal of the day');
-insert into account_status_types (name, description) values ('Lunch',     'Mid day meal');
-insert into account_status_types (name, description) values ('Dinner',    'Last meal of the day');
-insert into account_status_types (name, description) values ('Snack',     'Any other meal');
+insert into meal_entry_types (name, description) values ('Breakfast', 'First meal of the day');
+insert into meal_entry_types (name, description) values ('Lunch',     'Mid day meal');
+insert into meal_entry_types (name, description) values ('Dinner',    'Last meal of the day');
+insert into meal_entry_types (name, description) values ('Snack',     'Any other meal');
 
 create table food_entries (
     id uuid not null constraint pk_food_entries primary key,

@@ -36,8 +36,8 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
           Seq(
             "id" -> id,
             "userId" -> userId,
-            "food_id" -> create.foodId,
-            "serving_id" -> create.servingId,
+            "foodId" -> create.foodId,
+            "servingId" -> create.servingId,
             "numberOfServings" -> create.numberOfServings,
             "mealEntry" -> MealEntry(create.mealEntry).stringValue,
             "entryDate" -> create.entryDate,

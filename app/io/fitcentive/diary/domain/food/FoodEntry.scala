@@ -20,14 +20,7 @@ case class FoodEntry(
 object FoodEntry {
   implicit lazy val writes: Writes[FoodEntry] = Json.writes[FoodEntry]
 
-  case class Create(
-    userId: UUID,
-    foodId: Int,
-    servingId: Int,
-    numberOfServings: Double,
-    mealEntry: String,
-    entryDate: Instant
-  )
+  case class Create(foodId: Int, servingId: Int, numberOfServings: Double, mealEntry: String, entryDate: Instant)
   object Create {
     implicit lazy val format: OFormat[FoodEntry.Create] = Json.format[FoodEntry.Create]
   }
