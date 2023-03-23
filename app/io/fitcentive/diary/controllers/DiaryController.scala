@@ -40,6 +40,16 @@ class DiaryController @Inject() (
       }
     }
 
+  def deleteCardioEntryFromDiary(implicit userId: UUID, cardioEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .deleteCardioDiaryEntry(userId, cardioEntryId)
+          .map(cardio => Ok)
+          .recover(resultErrorAsyncHandler)
+      }(request, userId)
+    }
+
   def addStrengthEntryToDiary(implicit userId: UUID): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
@@ -50,6 +60,16 @@ class DiaryController @Inject() (
             .recover(resultErrorAsyncHandler)
         }
       }
+    }
+
+  def deleteStrengthEntryFromDiary(implicit userId: UUID, strengthEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .deleteStrengthDiaryEntry(userId, strengthEntryId)
+          .map(cardio => Ok)
+          .recover(resultErrorAsyncHandler)
+      }(request, userId)
     }
 
   def getAllCardioWorkoutsForUserByDay(implicit userId: UUID, dateString: String): Action[AnyContent] =
@@ -95,5 +115,15 @@ class DiaryController @Inject() (
             .recover(resultErrorAsyncHandler)
         }
       }
+    }
+
+  def deleteFoodEntryFromDiary(implicit userId: UUID, foodEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .deleteFoodDiaryEntry(userId, foodEntryId)
+          .map(_ => Ok)
+          .recover(resultErrorAsyncHandler)
+      }(request, userId)
     }
 }

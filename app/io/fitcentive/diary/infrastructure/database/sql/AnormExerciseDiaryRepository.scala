@@ -79,6 +79,19 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
         )(strengthWorkoutRowParser).toDomain
       }
     }
+
+  override def deleteCardioWorkoutForUser(userId: UUID, id: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DELETE_CARDIO_WORKOUT_ENTRY, Seq("userId" -> userId, "cardioWorkoutEntryId" -> id))
+    }
+
+  override def deleteStrengthWorkoutForUser(userId: UUID, id: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(
+        SQL_DELETE_STRENGTH_WORKOUT_ENTRY,
+        Seq("userId" -> userId, "strengthWorkoutEntryId" -> id)
+      )
+    }
 }
 
 object AnormExerciseDiaryRepository extends AnormOps {
@@ -122,6 +135,20 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |from cardio_workouts
       |where user_id = {userId}::uuid
       |and cardio_date::date = {cardioDate}::date ;
+      |""".stripMargin
+
+  private val SQL_DELETE_CARDIO_WORKOUT_ENTRY: String =
+    """
+      |delete from cardio_workouts
+      |where user_id = {userId}::uuid 
+      |and id = {cardioWorkoutEntryId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_DELETE_STRENGTH_WORKOUT_ENTRY: String =
+    """
+      |delete from strength_workouts
+      |where user_id = {userId}::uuid 
+      |and id = {strengthWorkoutEntryId}::uuid ;
       |""".stripMargin
 
   private case class StrengthWorkoutRow(

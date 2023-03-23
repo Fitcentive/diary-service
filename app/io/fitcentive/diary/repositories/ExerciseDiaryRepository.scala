@@ -13,6 +13,8 @@ import scala.concurrent.Future
 trait ExerciseDiaryRepository {
   def getAllCardioWorkoutsForDayByUser(userId: UUID, day: Instant): Future[Seq[CardioWorkout]]
   def insertCardioWorkoutForUser(id: UUID, userId: UUID, create: exercise.CardioWorkout.Create): Future[CardioWorkout]
+  def deleteCardioWorkoutForUser(userId: UUID, id: UUID): Future[Unit]
   def getAllStrengthWorkoutsForDayByUser(userId: UUID, day: Instant): Future[Seq[StrengthWorkout]]
   def insertStrengthWorkoutForUser(id: UUID, userId: UUID, create: StrengthWorkout.Create): Future[StrengthWorkout]
+  def deleteStrengthWorkoutForUser(userId: UUID, id: UUID): Future[Unit]
 }

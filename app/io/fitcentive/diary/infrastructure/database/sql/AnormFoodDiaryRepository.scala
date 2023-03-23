@@ -47,9 +47,20 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
       }
     }
 
+  override def deleteFoodDiaryEntry(userId: UUID, id: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DELETE_FOOD_DIARY_ENTRY, Seq("userId" -> userId, "foodEntryId" -> id))
+    }
 }
 
 object AnormFoodDiaryRepository extends AnormOps {
+
+  private val SQL_DELETE_FOOD_DIARY_ENTRY: String =
+    """
+      |delete from food_entries
+      |where user_id = {userId}::uuid 
+      |and id = {foodEntryId}::uuid ;
+      |""".stripMargin
 
   private val SQL_INSERT_AND_RETURN_FOOD_ENTRY: String =
     """

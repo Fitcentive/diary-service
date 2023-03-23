@@ -11,14 +11,17 @@ GET      /api/diary/exercise                                                    
 
 # Cardio workout endpoints
 POST     /api/diary/user/:userId/cardio                                                         io.fitcentive.diary.controllers.DiaryController.addCardioEntryToDiary(userId: java.util.UUID)
+DELETE   /api/diary/user/:userId/cardio/:cardioEntryId                                          io.fitcentive.diary.controllers.DiaryController.deleteCardioEntryFromDiary(userId: java.util.UUID, cardioEntryId: java.util.UUID)
 GET      /api/diary/user/:userId/date/:dateString/cardio                                        io.fitcentive.diary.controllers.DiaryController.getAllCardioWorkoutsForUserByDay(userId: java.util.UUID, dateString: String)
 
 # Strength workout endpoints
 POST     /api/diary/user/:userId/strength                                                       io.fitcentive.diary.controllers.DiaryController.addStrengthEntryToDiary(userId: java.util.UUID)
+DELETE   /api/diary/user/:userId/strength/:strengthEntryId                                      io.fitcentive.diary.controllers.DiaryController.deleteStrengthEntryFromDiary(userId: java.util.UUID, strengthEntryId: java.util.UUID)
 GET      /api/diary/user/:userId/date/:dateString/strength                                      io.fitcentive.diary.controllers.DiaryController.getAllStrengthWorkoutsForUserByDay(userId: java.util.UUID, dateString: String)
 
 # Food entry endpoints
 POST     /api/diary/user/:userId/food                                                           io.fitcentive.diary.controllers.DiaryController.addFoodEntryToDiary(userId: java.util.UUID)
+DELETE   /api/diary/user/:userId/food/:foodEntryId                                              io.fitcentive.diary.controllers.DiaryController.deleteFoodEntryFromDiary(userId: java.util.UUID, foodEntryId: java.util.UUID)
 GET      /api/diary/user/:userId/date/:dateString/food                                          io.fitcentive.diary.controllers.DiaryController.getAllFoodEntriesForUserByDay(userId: java.util.UUID, dateString: String)
 
 # Nutrition endpoints

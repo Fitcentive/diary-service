@@ -21,9 +21,17 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
     exerciseDiaryRepository
       .insertCardioWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
 
+  def deleteCardioDiaryEntry(userId: UUID, cardioWorkoutEntryId: UUID): Future[Unit] =
+    exerciseDiaryRepository
+      .deleteCardioWorkoutForUser(userId, cardioWorkoutEntryId)
+
   def insertStrengthDiaryEntry(userId: UUID, create: StrengthWorkout.Create): Future[StrengthWorkout] =
     exerciseDiaryRepository
       .insertStrengthWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
+
+  def deleteStrengthDiaryEntry(userId: UUID, strengthWorkoutEntryId: UUID): Future[Unit] =
+    exerciseDiaryRepository
+      .deleteStrengthWorkoutForUser(userId, strengthWorkoutEntryId)
 
   def getCardioEntriesForUserByDay(userId: UUID, day: Instant): Future[Seq[CardioWorkout]] =
     exerciseDiaryRepository
@@ -39,6 +47,10 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
   def insertFoodDiaryEntry(userId: UUID, create: FoodEntry.Create): Future[FoodEntry] =
     foodDiaryRepository
       .insertFoodDiaryEntry(id = UUID.randomUUID(), userId = userId, create = create)
+
+  def deleteFoodDiaryEntry(userId: UUID, foodEntryId: UUID): Future[Unit] =
+    foodDiaryRepository
+      .deleteFoodDiaryEntry(userId, foodEntryId)
 
   def getFoodEntriesForUserByDay(userId: UUID, day: Instant): Future[Seq[FoodEntry]] =
     foodDiaryRepository
