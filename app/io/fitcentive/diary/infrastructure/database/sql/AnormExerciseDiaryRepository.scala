@@ -21,6 +21,16 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
 
   import AnormExerciseDiaryRepository._
 
+  override def deleteAllCardioWorkoutsForUser(userId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DELETE_ALL_CARDIO_WORKOUT_ENTRIES, Seq("userId" -> userId))
+    }
+
+  override def deleteAllStrengthWorkoutsForUser(userId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DELETE_ALL_STRENGTH_WORKOUT_ENTRIES, Seq("userId" -> userId))
+    }
+
   override def getAllCardioWorkoutsForDayByUser(userId: UUID, day: Instant): Future[Seq[CardioWorkout]] =
     Future {
       getRecords(SQL_GET_CARDIO_WORKOUTS_FOR_USER_BY_DATE, "userId" -> userId, "cardioDate" -> Date.from(day))(
@@ -142,6 +152,18 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |delete from cardio_workouts
       |where user_id = {userId}::uuid 
       |and id = {cardioWorkoutEntryId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_DELETE_ALL_CARDIO_WORKOUT_ENTRIES: String =
+    """
+      |delete from cardio_workouts
+      |where user_id = {userId}::uuid  ;
+      |""".stripMargin
+
+  private val SQL_DELETE_ALL_STRENGTH_WORKOUT_ENTRIES: String =
+    """
+      |delete from strength_workouts
+      |where user_id = {userId}::uuid  ;
       |""".stripMargin
 
   private val SQL_DELETE_STRENGTH_WORKOUT_ENTRY: String =

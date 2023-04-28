@@ -27,3 +27,11 @@ GET      /api/diary/user/:userId/date/:dateString/food                          
 # Nutrition endpoints
 GET      /api/diary/food/search                                                                 io.fitcentive.diary.controllers.NutritionController.searchFoodsByExpression(query: String, pageNumber: Option[Int] ?= None, maxResults: Option[Int] ?= None)
 GET      /api/diary/food/:foodId                                                                io.fitcentive.diary.controllers.NutritionController.getFoodById(foodId: String)
+
+# Fitness user profile
+GET      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.getUserFitnessProfile(userId: java.util.UUID)
+PUT      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.upsertUserFitnessProfile(userId: java.util.UUID)
+
+
+# Internal endpoints
+DELETE  /api/internal/diary/user/:userId                                                        io.fitcentive.diary.controllers.UserController.deleteUserDiaryData(userId: java.util.UUID)

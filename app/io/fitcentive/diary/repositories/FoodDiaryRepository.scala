@@ -13,4 +13,5 @@ trait FoodDiaryRepository {
   def getAllFoodEntriesForDayByUser(userId: UUID, day: Instant): Future[Seq[FoodEntry]]
   def insertFoodDiaryEntry(id: UUID, userId: UUID, create: FoodEntry.Create): Future[FoodEntry]
   def deleteFoodDiaryEntry(userId: UUID, id: UUID): Future[Unit]
+  def deleteAllFoodEntriesForUser(userId: UUID): Future[Unit]
 }

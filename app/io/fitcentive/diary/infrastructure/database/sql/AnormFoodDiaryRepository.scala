@@ -21,6 +21,11 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
 
   import AnormFoodDiaryRepository._
 
+  override def deleteAllFoodEntriesForUser(userId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DELETE_ALL_FOOD_DIARY_ENTRIES, Seq("userId" -> userId))
+    }
+
   override def getAllFoodEntriesForDayByUser(userId: UUID, day: Instant): Future[Seq[FoodEntry]] =
     Future {
       getRecords(SQL_GET_FOOD_ENTRIES_FOR_USER_BY_DATE, "userId" -> userId, "entryDate" -> Date.from(day))(
@@ -54,6 +59,12 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
 }
 
 object AnormFoodDiaryRepository extends AnormOps {
+
+  private val SQL_DELETE_ALL_FOOD_DIARY_ENTRIES: String =
+    """
+      |delete from food_entries
+      |where user_id = {userId}::uuid ;
+      |""".stripMargin
 
   private val SQL_DELETE_FOOD_DIARY_ENTRY: String =
     """
