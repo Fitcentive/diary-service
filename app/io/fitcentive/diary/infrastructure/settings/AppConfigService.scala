@@ -2,7 +2,14 @@ package io.fitcentive.diary.infrastructure.settings
 
 import com.typesafe.config.Config
 import io.fitcentive.sdk.config.{GcpConfig, JwtConfig, SecretConfig, ServerConfig}
-import io.fitcentive.diary.domain.config.{EnvironmentConfig, FatsecretApiConfig, WgerApiConfig}
+import io.fitcentive.diary.domain.config.{
+  AppPubSubConfig,
+  EnvironmentConfig,
+  FatsecretApiConfig,
+  SubscriptionsConfig,
+  TopicsConfig,
+  WgerApiConfig
+}
 import io.fitcentive.diary.services.SettingsService
 import play.api.Configuration
 
@@ -10,6 +17,15 @@ import javax.inject.{Inject, Singleton}
 
 @Singleton
 class AppConfigService @Inject() (config: Configuration) extends SettingsService {
+
+  override def pubSubConfig: AppPubSubConfig =
+    AppPubSubConfig(
+      topicsConfig = TopicsConfig.fromConfig(config.get[Config]("gcp.pubsub.topics")),
+      subscriptionsConfig = SubscriptionsConfig.fromConfig(config.get[Config]("gcp.pubsub.subscriptions"))
+    )
+
+  override def serviceAccountStringCredentials: String =
+    config.get[String]("gcp.pubsub.service-account-string-credentials")
 
   override def fatsecretApiConfig: FatsecretApiConfig = FatsecretApiConfig.fromConfig(config.get[Config]("fatsecret"))
 

@@ -61,6 +61,8 @@ spec:
                 name: diary-service-cloudsql-database-credentials
             - secretRef:
                 name: diary-service-fatsecret-credentials
+            - secretRef:
+                name: diary-service-service-account-credentials
           env:
             - name: GCP_PROJECT_NAME
               value: "fitcentive-dev-02"
@@ -102,6 +104,10 @@ spec:
               value: "https://wger.de"
             - name: WGER_API_VERSION
               value: "/api/v2"
+            - name: TOPIC_WARM_WGER_API_CACHE
+              value: "warm-wger-api-cache"
+            - name: SUBSCRIPTION_WARM_WGER_API_CACHE
+              value: "warm-wger-api-cache"
       volumes:
         - name: cloudsql-creds
           secret:

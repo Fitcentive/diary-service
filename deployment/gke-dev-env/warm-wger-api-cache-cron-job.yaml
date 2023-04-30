@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: warm-wger-api-cache-cronjob
+  namespace: diary
+spec:
+  # This runs every 30 mins
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: warm-wger-api-cache-cronjob
+              image: gcr.io/fitcentive-dev-02/gcloud-diary-cron-pubsub-image:1.0
+              imagePullPolicy: Always
+              volumeMounts:
+                - mountPath: /opt/service-account
+                  name: service-account
+          restartPolicy: OnFailure
+          volumes:
+            - name: service-account
+              configMap:
+                name: diary-service-service-account
