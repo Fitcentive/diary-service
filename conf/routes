@@ -28,6 +28,10 @@ POST     /api/diary/user/:userId/food                                           
 DELETE   /api/diary/user/:userId/food/:foodEntryId                                              io.fitcentive.diary.controllers.DiaryController.deleteFoodEntryFromDiary(userId: java.util.UUID, foodEntryId: java.util.UUID)
 GET      /api/diary/user/:userId/date/:dateString/food                                          io.fitcentive.diary.controllers.DiaryController.getAllFoodEntriesForUserByDay(userId: java.util.UUID, dateString: String)
 
+# Most recently viewed foods endpoints
+GET      /api/diary/user/:userId/recently-viewed-foods                                          io.fitcentive.diary.controllers.DiaryController.getUserMostRecentlyViewedFoods(userId: java.util.UUID)
+POST     /api/diary/user/:userId/recently-viewed-foods                                          io.fitcentive.diary.controllers.DiaryController.addUserMostRecentlyViewedFood(userId: java.util.UUID)
+
 # Nutrition endpoints
 GET      /api/diary/food/search                                                                 io.fitcentive.diary.controllers.NutritionController.searchFoodsByExpression(query: String, pageNumber: Option[Int] ?= None, maxResults: Option[Int] ?= None)
 GET      /api/diary/food/:foodId                                                                io.fitcentive.diary.controllers.NutritionController.getFoodById(foodId: String)

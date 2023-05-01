@@ -76,4 +76,22 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
     foodDiaryRepository
       .getAllFoodEntriesForDayByUser(userId, day)
 
+  def getUserMostRecentlyViewedFoodIds(userId: UUID): Future[Seq[Int]] =
+    foodDiaryRepository
+      .getUserRecentlyViewedFoodIds(userId)
+
+  def addUserMostRecentlyViewedFood(userId: UUID, foodId: Int): Future[Unit] =
+    for {
+      existingHistory <- foodDiaryRepository.getUserRecentlyViewedFoodIds(userId)
+      _ <-
+        if (existingHistory.length >= 10) {
+          existingHistory.lastOption
+            .map(staleFoodId => foodDiaryRepository.deleteMostRecentlyViewedFoodForUser(userId, staleFoodId))
+            .getOrElse(Future.unit)
+        } else {
+          Future.unit
+        }
+      _ <- foodDiaryRepository.upsertMostRecentlyViewedFoodForUser(userId, foodId)
+    } yield ()
+
 }

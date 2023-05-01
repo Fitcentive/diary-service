@@ -1,6 +1,6 @@
 package io.fitcentive.diary.infrastructure.database.sql
 
-import anorm.{Macro, RowParser}
+import anorm.{Macro, RowParser, SqlParser}
 import io.fitcentive.diary.domain.food.{FoodEntry, MealEntry}
 import io.fitcentive.sdk.infrastructure.contexts.DatabaseExecutionContext
 import io.fitcentive.sdk.infrastructure.database.DatabaseClient
@@ -20,6 +20,26 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
   with DatabaseClient {
 
   import AnormFoodDiaryRepository._
+
+  override def getUserRecentlyViewedFoodIds(userId: UUID): Future[Seq[Int]] =
+    Future {
+      getRecords(SQL_GET_USER_RECENTLY_VIEWED_FOODS, "userId" -> userId)(SqlParser.scalar[Int])
+    }
+
+  override def deleteMostRecentlyViewedFoodForUser(userId: UUID, foodId: Int): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DELETE_USER_RECENTLY_VIEWED_FOODS, Seq("userId" -> userId, "foodId" -> foodId))
+    }
+
+  override def upsertMostRecentlyViewedFoodForUser(userId: UUID, foodId: Int): Future[Unit] =
+    Future {
+      Instant.now.pipe { now =>
+        executeSqlWithoutReturning(
+          SQL_UPSERT_USER_RECENTLY_VIEWED_FOODS,
+          Seq("id" -> UUID.randomUUID(), "userId" -> userId, "foodId" -> foodId, "now" -> now)
+        )
+      }
+    }
 
   override def deleteAllFoodEntriesForUser(userId: UUID): Future[Unit] =
     Future {
@@ -86,6 +106,30 @@ object AnormFoodDiaryRepository extends AnormOps {
       |from food_entries
       |where user_id = {userId}::uuid
       |and entry_date::date = {entryDate}::date ;
+      |""".stripMargin
+
+  private val SQL_GET_USER_RECENTLY_VIEWED_FOODS: String =
+    """
+      |select food_id
+      |from user_recently_viewed_foods
+      |where user_id = {userId}::uuid
+      |order by last_accessed desc ;
+      |""".stripMargin
+
+  private val SQL_DELETE_USER_RECENTLY_VIEWED_FOODS: String =
+    """
+      |delete from user_recently_viewed_foods
+      |where user_id = {userId}::uuid 
+      |and food_id = {foodId} ;
+      |""".stripMargin
+
+  private val SQL_UPSERT_USER_RECENTLY_VIEWED_FOODS: String =
+    """
+      |insert into user_recently_viewed_foods (id, user_id, food_id, last_accessed, created_at, updated_at)
+      |values ({id}::uuid, {userId}:: uuid, {foodId}, {now}, {now}, {now}) 
+      |on conflict (user_id, food_id) 
+      |do update set 
+      |last_accessed = {now};
       |""".stripMargin
 
   private case class FoodEntryRow(

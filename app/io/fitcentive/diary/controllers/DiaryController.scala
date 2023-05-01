@@ -3,7 +3,7 @@ package io.fitcentive.diary.controllers
 import io.fitcentive.diary.api.{DiaryApi, ExerciseApi}
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
-import io.fitcentive.diary.domain.payloads.UUIDPayload
+import io.fitcentive.diary.domain.payloads.{IntPayload, UUIDPayload}
 import io.fitcentive.diary.infrastructure.utils.ServerErrorHandler
 import io.fitcentive.sdk.play.{InternalAuthAction, UserAuthAction}
 import io.fitcentive.sdk.utils.PlayControllerOps
@@ -148,5 +148,27 @@ class DiaryController @Inject() (
           .map(_ => Ok)
           .recover(resultErrorAsyncHandler)
       }(request, userId)
+    }
+
+  def getUserMostRecentlyViewedFoods(implicit userId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getUserMostRecentlyViewedFoodIds(userId)
+          .map(userIds => Ok(Json.toJson(userIds)))
+          .recover(resultErrorAsyncHandler)
+      }
+    }
+
+  def addUserMostRecentlyViewedFood(implicit userId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        validateJson[IntPayload](request.body.asJson) { payload =>
+          diaryApi
+            .addUserMostRecentlyViewedFood(userId, payload.id)
+            .map(_ => NoContent)
+            .recover(resultErrorAsyncHandler)
+        }
+      }
     }
 }
