@@ -1,6 +1,6 @@
 package io.fitcentive.diary.infrastructure.database.sql
 
-import anorm.{Macro, RowParser}
+import anorm.{Macro, RowParser, SqlParser}
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.sdk.infrastructure.contexts.DatabaseExecutionContext
 import io.fitcentive.sdk.infrastructure.database.DatabaseClient
@@ -20,6 +20,29 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
   with DatabaseClient {
 
   import AnormExerciseDiaryRepository._
+
+  override def getUserRecentlyViewedWorkoutIds(userId: UUID): Future[Seq[UUID]] =
+    Future {
+      getRecords(SQL_GET_USER_RECENTLY_VIEWED_WORKOUTS, "userId" -> userId)(SqlParser.scalar[UUID])
+    }
+
+  override def deleteMostRecentlyViewedWorkoutForUser(userId: UUID, workoutId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(
+        SQL_DELETE_USER_RECENTLY_VIEWED_WORKOUTS,
+        Seq("userId" -> userId, "workoutId" -> workoutId)
+      )
+    }
+
+  override def addMostRecentlyViewedWorkoutForUser(userId: UUID, workoutId: UUID): Future[Unit] =
+    Future {
+      Instant.now.pipe { now =>
+        executeSqlWithoutReturning(
+          SQL_ADD_USER_RECENTLY_VIEWED_WORKOUTS,
+          Seq("userId" -> userId, "workoutId" -> workoutId, "now" -> now)
+        )
+      }
+    }
 
   override def deleteAllCardioWorkoutsForUser(userId: UUID): Future[Unit] =
     Future {
@@ -171,6 +194,27 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |delete from strength_workouts
       |where user_id = {userId}::uuid 
       |and id = {strengthWorkoutEntryId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_GET_USER_RECENTLY_VIEWED_WORKOUTS: String =
+    """
+      |select workout_id
+      |from user_recently_viewed_workouts
+      |where user_id = {userId}::uuid
+      |order_by last_accessed desc ;
+      |""".stripMargin
+
+  private val SQL_DELETE_USER_RECENTLY_VIEWED_WORKOUTS: String =
+    """
+      |delete from user_recently_viewed_workouts
+      |where user_id = {userId}::uuid 
+      |and workout_id = {workoutId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_ADD_USER_RECENTLY_VIEWED_WORKOUTS: String =
+    """
+      |insert into user_recently_viewed_workouts (user_id, workout_id, last_accessed, created_at, updated_at)
+      |values ({userId}:: uuid, {workoutId}::uuid, {now}, {now}, {now}) ;
       |""".stripMargin
 
   private case class StrengthWorkoutRow(

@@ -41,6 +41,20 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
     exerciseDiaryRepository
       .getAllStrengthWorkoutsForDayByUser(userId = userId, day = day)
 
+  def getUserMostRecentlyViewedWorkoutIds(userId: UUID): Future[Seq[UUID]] =
+    exerciseDiaryRepository
+      .getUserRecentlyViewedWorkoutIds(userId)
+
+  def addUserMostRecentlyViewedWorkout(userId: UUID, workoutId: UUID): Future[Unit] =
+    for {
+      existingHistory <- exerciseDiaryRepository.getUserRecentlyViewedWorkoutIds(userId)
+      _ <-
+        existingHistory.lastOption
+          .map(staleWorkoutId => exerciseDiaryRepository.deleteMostRecentlyViewedWorkoutForUser(userId, staleWorkoutId))
+          .getOrElse(Future.unit)
+      _ <- exerciseDiaryRepository.addMostRecentlyViewedWorkoutForUser(userId, workoutId)
+    } yield ()
+
   // --------------------------------
   // Food Diary API methods
   // --------------------------------

@@ -3,6 +3,7 @@ package io.fitcentive.diary.controllers
 import io.fitcentive.diary.api.{DiaryApi, ExerciseApi}
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
+import io.fitcentive.diary.domain.payloads.UUIDPayload
 import io.fitcentive.diary.infrastructure.utils.ServerErrorHandler
 import io.fitcentive.sdk.play.{InternalAuthAction, UserAuthAction}
 import io.fitcentive.sdk.utils.PlayControllerOps
@@ -89,6 +90,28 @@ class DiaryController @Inject() (
           .getStrengthEntriesForUserByDay(userId, LocalDate.parse(dateString).atStartOfDay().toInstant(ZoneOffset.UTC))
           .map(cardio => Ok(Json.toJson(cardio)))
           .recover(resultErrorAsyncHandler)
+      }
+    }
+
+  def getUserMostRecentlyViewedWorkouts(implicit userId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getUserMostRecentlyViewedWorkoutIds(userId)
+          .map(userIds => Ok(Json.toJson(userIds)))
+          .recover(resultErrorAsyncHandler)
+      }
+    }
+
+  def addUserMostRecentlyViewedWorkout(implicit userId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        validateJson[UUIDPayload](request.body.asJson) { payload =>
+          diaryApi
+            .addUserMostRecentlyViewedWorkout(userId, payload.id)
+            .map(_ => NoContent)
+            .recover(resultErrorAsyncHandler)
+        }
       }
     }
 
