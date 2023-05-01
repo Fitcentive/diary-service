@@ -21,7 +21,7 @@ GET      /api/diary/user/:userId/date/:dateString/strength                      
 
 # Most recently viewed exercise endpoints
 GET      /api/diary/user/:userId/recently-viewed-workouts                                       io.fitcentive.diary.controllers.DiaryController.getUserMostRecentlyViewedWorkouts(userId: java.util.UUID)
-POST     /api/diary/user/:userId/recently-viewed-workouts                                       io.fitcentive.diary.controllers.DiaryController.getUserMostRecentlyViewedWorkouts(userId: java.util.UUID)
+POST     /api/diary/user/:userId/recently-viewed-workouts                                       io.fitcentive.diary.controllers.DiaryController.addUserMostRecentlyViewedWorkout(userId: java.util.UUID)
 
 # Food entry endpoints
 POST     /api/diary/user/:userId/food                                                           io.fitcentive.diary.controllers.DiaryController.addFoodEntryToDiary(userId: java.util.UUID)

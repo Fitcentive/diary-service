@@ -34,12 +34,12 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
       )
     }
 
-  override def addMostRecentlyViewedWorkoutForUser(userId: UUID, workoutId: UUID): Future[Unit] =
+  override def upsertMostRecentlyViewedWorkoutForUser(userId: UUID, workoutId: UUID): Future[Unit] =
     Future {
       Instant.now.pipe { now =>
         executeSqlWithoutReturning(
-          SQL_ADD_USER_RECENTLY_VIEWED_WORKOUTS,
-          Seq("userId" -> userId, "workoutId" -> workoutId, "now" -> now)
+          SQL_UPSERT_USER_RECENTLY_VIEWED_WORKOUTS,
+          Seq("id" -> UUID.randomUUID(), "userId" -> userId, "workoutId" -> workoutId, "now" -> now)
         )
       }
     }
@@ -201,7 +201,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |select workout_id
       |from user_recently_viewed_workouts
       |where user_id = {userId}::uuid
-      |order_by last_accessed desc ;
+      |order by last_accessed desc ;
       |""".stripMargin
 
   private val SQL_DELETE_USER_RECENTLY_VIEWED_WORKOUTS: String =
@@ -211,10 +211,13 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |and workout_id = {workoutId}::uuid ;
       |""".stripMargin
 
-  private val SQL_ADD_USER_RECENTLY_VIEWED_WORKOUTS: String =
+  private val SQL_UPSERT_USER_RECENTLY_VIEWED_WORKOUTS: String =
     """
-      |insert into user_recently_viewed_workouts (user_id, workout_id, last_accessed, created_at, updated_at)
-      |values ({userId}:: uuid, {workoutId}::uuid, {now}, {now}, {now}) ;
+      |insert into user_recently_viewed_workouts (id, user_id, workout_id, last_accessed, created_at, updated_at)
+      |values ({id}::uuid, {userId}:: uuid, {workoutId}::uuid, {now}, {now}, {now}) 
+      |on conflict (user_id, workout_id) 
+      |do update set 
+      |last_accessed = {now};
       |""".stripMargin
 
   private case class StrengthWorkoutRow(

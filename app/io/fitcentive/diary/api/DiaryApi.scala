@@ -49,10 +49,16 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
     for {
       existingHistory <- exerciseDiaryRepository.getUserRecentlyViewedWorkoutIds(userId)
       _ <-
-        existingHistory.lastOption
-          .map(staleWorkoutId => exerciseDiaryRepository.deleteMostRecentlyViewedWorkoutForUser(userId, staleWorkoutId))
-          .getOrElse(Future.unit)
-      _ <- exerciseDiaryRepository.addMostRecentlyViewedWorkoutForUser(userId, workoutId)
+        if (existingHistory.length >= 10) {
+          existingHistory.lastOption
+            .map(
+              staleWorkoutId => exerciseDiaryRepository.deleteMostRecentlyViewedWorkoutForUser(userId, staleWorkoutId)
+            )
+            .getOrElse(Future.unit)
+        } else {
+          Future.unit
+        }
+      _ <- exerciseDiaryRepository.upsertMostRecentlyViewedWorkoutForUser(userId, workoutId)
     } yield ()
 
   // --------------------------------
