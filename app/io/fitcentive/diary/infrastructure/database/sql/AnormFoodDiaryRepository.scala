@@ -46,11 +46,18 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
       executeSqlWithoutReturning(SQL_DELETE_ALL_FOOD_DIARY_ENTRIES, Seq("userId" -> userId))
     }
 
-  override def getAllFoodEntriesForDayByUser(userId: UUID, day: Instant): Future[Seq[FoodEntry]] =
+  override def getAllFoodEntriesForDayByUser(
+    userId: UUID,
+    windowStart: Instant,
+    windowEnd: Instant
+  ): Future[Seq[FoodEntry]] =
     Future {
-      getRecords(SQL_GET_FOOD_ENTRIES_FOR_USER_BY_DATE, "userId" -> userId, "entryDate" -> Date.from(day))(
-        foodEntryRowParser
-      ).map(_.toDomain)
+      getRecords(
+        SQL_GET_FOOD_ENTRIES_FOR_USER_BY_DATE,
+        "userId" -> userId,
+        "windowStart" -> windowStart,
+        "windowEnd" -> windowEnd
+      )(foodEntryRowParser).map(_.toDomain)
     }
 
   override def insertFoodDiaryEntry(id: UUID, userId: UUID, create: FoodEntry.Create): Future[FoodEntry] =
@@ -105,7 +112,8 @@ object AnormFoodDiaryRepository extends AnormOps {
       |select * 
       |from food_entries
       |where user_id = {userId}::uuid
-      |and entry_date::date = {entryDate}::date ;
+      |and entry_date >= {windowStart} 
+      |and entry_date <= {windowEnd} ;
       |""".stripMargin
 
   private val SQL_GET_USER_RECENTLY_VIEWED_FOODS: String =

@@ -54,11 +54,18 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
       executeSqlWithoutReturning(SQL_DELETE_ALL_STRENGTH_WORKOUT_ENTRIES, Seq("userId" -> userId))
     }
 
-  override def getAllCardioWorkoutsForDayByUser(userId: UUID, day: Instant): Future[Seq[CardioWorkout]] =
+  override def getAllCardioWorkoutsForDayByUser(
+    userId: UUID,
+    windowStart: Instant,
+    windowEnd: Instant
+  ): Future[Seq[CardioWorkout]] =
     Future {
-      getRecords(SQL_GET_CARDIO_WORKOUTS_FOR_USER_BY_DATE, "userId" -> userId, "cardioDate" -> Date.from(day))(
-        cardioWorkoutRowParser
-      ).map(_.toDomain)
+      getRecords(
+        SQL_GET_CARDIO_WORKOUTS_FOR_USER_BY_DATE,
+        "userId" -> userId,
+        "windowStart" -> windowStart,
+        "windowEnd" -> windowEnd
+      )(cardioWorkoutRowParser).map(_.toDomain)
     }
 
   override def insertCardioWorkoutForUser(id: UUID, userId: UUID, create: CardioWorkout.Create): Future[CardioWorkout] =
@@ -81,11 +88,18 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
       }
     }
 
-  override def getAllStrengthWorkoutsForDayByUser(userId: UUID, day: Instant): Future[Seq[StrengthWorkout]] =
+  override def getAllStrengthWorkoutsForDayByUser(
+    userId: UUID,
+    windowStart: Instant,
+    windowEnd: Instant
+  ): Future[Seq[StrengthWorkout]] =
     Future {
-      getRecords(SQL_GET_STRENGTH_WORKOUTS_FOR_USER_BY_DATE, "userId" -> userId, "exerciseDate" -> Date.from(day))(
-        strengthWorkoutRowParser
-      ).map(_.toDomain)
+      getRecords(
+        SQL_GET_STRENGTH_WORKOUTS_FOR_USER_BY_DATE,
+        "userId" -> userId,
+        "windowStart" -> windowStart,
+        "windowEnd" -> windowEnd
+      )(strengthWorkoutRowParser).map(_.toDomain)
     }
 
   override def insertStrengthWorkoutForUser(
@@ -152,7 +166,8 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |select * 
       |from strength_workouts
       |where user_id = {userId}::uuid
-      |and exercise_date::date = {exerciseDate}::date ;
+      |and exercise_date >= {windowStart}
+      |and exercise_date <= {windowEnd} ;
       |""".stripMargin
 
   private val SQL_INSERT_AND_RETURN_CARDIO_WORKOUT: String =
@@ -167,7 +182,8 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |select * 
       |from cardio_workouts
       |where user_id = {userId}::uuid
-      |and cardio_date::date = {cardioDate}::date ;
+      |and cardio_date >= {windowStart} 
+      |and cardio_date <= {windowEnd} ;
       |""".stripMargin
 
   private val SQL_DELETE_CARDIO_WORKOUT_ENTRY: String =

@@ -5,6 +5,7 @@ import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository}
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,13 +34,19 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
     exerciseDiaryRepository
       .deleteStrengthWorkoutForUser(userId, strengthWorkoutEntryId)
 
-  def getCardioEntriesForUserByDay(userId: UUID, day: Instant): Future[Seq[CardioWorkout]] =
+  def getCardioEntriesForUserByDay(userId: UUID, day: Instant, offsetInMinutes: Int): Future[Seq[CardioWorkout]] = {
+    val windowStart = day.plus(-offsetInMinutes, ChronoUnit.MINUTES);
+    val windowEnd = windowStart.plus(1, ChronoUnit.DAYS);
     exerciseDiaryRepository
-      .getAllCardioWorkoutsForDayByUser(userId = userId, day = day)
+      .getAllCardioWorkoutsForDayByUser(userId = userId, windowStart, windowEnd)
+  }
 
-  def getStrengthEntriesForUserByDay(userId: UUID, day: Instant): Future[Seq[StrengthWorkout]] =
+  def getStrengthEntriesForUserByDay(userId: UUID, day: Instant, offsetInMinutes: Int): Future[Seq[StrengthWorkout]] = {
+    val windowStart = day.plus(-offsetInMinutes, ChronoUnit.MINUTES)
+    val windowEnd = windowStart.plus(1, ChronoUnit.DAYS)
     exerciseDiaryRepository
-      .getAllStrengthWorkoutsForDayByUser(userId = userId, day = day)
+      .getAllStrengthWorkoutsForDayByUser(userId = userId, windowStart, windowEnd)
+  }
 
   def getUserMostRecentlyViewedWorkoutIds(userId: UUID): Future[Seq[UUID]] =
     exerciseDiaryRepository
@@ -72,9 +79,12 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
     foodDiaryRepository
       .deleteFoodDiaryEntry(userId, foodEntryId)
 
-  def getFoodEntriesForUserByDay(userId: UUID, day: Instant): Future[Seq[FoodEntry]] =
+  def getFoodEntriesForUserByDay(userId: UUID, day: Instant, offsetInMinutes: Int): Future[Seq[FoodEntry]] = {
+    val windowStart = day.plus(-offsetInMinutes, ChronoUnit.MINUTES)
+    val windowEnd = windowStart.plus(1, ChronoUnit.DAYS)
     foodDiaryRepository
-      .getAllFoodEntriesForDayByUser(userId, day)
+      .getAllFoodEntriesForDayByUser(userId, windowStart, windowEnd)
+  }
 
   def getUserMostRecentlyViewedFoodIds(userId: UUID): Future[Seq[Int]] =
     foodDiaryRepository
