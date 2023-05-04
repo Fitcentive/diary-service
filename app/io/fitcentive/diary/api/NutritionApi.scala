@@ -1,6 +1,11 @@
 package io.fitcentive.diary.api
 
-import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodGetResultSingleServing, FoodSearchResults}
+import io.fitcentive.diary.domain.fatsecret.{
+  FoodGetResult,
+  FoodGetResultSingleServing,
+  FoodSearchResults,
+  FoodSearchSuggestions
+}
 import io.fitcentive.diary.infrastructure.rest.RestFatsecretApiService
 import io.fitcentive.diary.services.NutritionService
 import io.fitcentive.sdk.error.DomainError
@@ -24,5 +29,11 @@ class NutritionApi @Inject() (nutritionService: NutritionService)(implicit ec: E
 
   def getFoodById(foodId: String): Future[Either[DomainError, Either[FoodGetResult, FoodGetResultSingleServing]]] =
     nutritionService.getFoodById(foodId)
+
+  def autcompleteFood(query: String, maxResults: Option[Int]): Future[Either[DomainError, FoodSearchSuggestions]] =
+    nutritionService.autoCompleteFoods(
+      query,
+      maxResults.fold(RestFatsecretApiService.defaultAutocompleteMaxResults)(identity)
+    )
 
 }

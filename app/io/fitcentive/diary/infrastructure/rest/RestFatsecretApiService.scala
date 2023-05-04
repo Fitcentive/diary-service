@@ -4,7 +4,12 @@ import play.api.http.Status
 import play.api.libs.ws.{EmptyBody, WSAuthScheme, WSClient}
 import io.fitcentive.diary.domain.config.FatsecretApiConfig
 import io.fitcentive.diary.domain.errors.FatsecretApiError
-import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodGetResultSingleServing, FoodSearchResults}
+import io.fitcentive.diary.domain.fatsecret.{
+  FoodGetResult,
+  FoodGetResultSingleServing,
+  FoodSearchResults,
+  FoodSearchSuggestions
+}
 import io.fitcentive.diary.services.{NutritionService, SettingsService}
 import io.fitcentive.sdk.error.DomainError
 import play.api.cache.AsyncCacheApi
@@ -23,6 +28,43 @@ class RestFatsecretApiService @Inject() (wsClient: WSClient, cache: AsyncCacheAp
   val fatsecretConfig: FatsecretApiConfig = settingsService.fatsecretApiConfig
   val apiBaseUrl: String = fatsecretConfig.apiHost
   val authBaseUrl: String = fatsecretConfig.authHost
+
+  override def autoCompleteFoods(query: String, maxResults: Int): Future[Either[DomainError, FoodSearchSuggestions]] =
+    cache
+      .getOrElseUpdate(fatsecretConfig.authTokenCacheKey, fatsecretConfig.authTokenCacheDuration) {
+        getAuthToken
+      }
+      .flatMap { authTokenE =>
+        authTokenE
+          .map { authToken =>
+            wsClient
+              .url(s"$apiBaseUrl")
+              .addQueryStringParameters(
+                "method" -> "foods.autocomplete",
+                "format" -> "json",
+                "expression" -> query,
+                "max_results" -> maxResults.toString
+              )
+              .addHttpHeaders("Authorization" -> s"Bearer $authToken")
+              .post(EmptyBody)
+              .map { response =>
+                response.status match {
+                  case Status.OK =>
+                    Try(response.json.as[FoodSearchSuggestions]) match {
+                      case Failure(e) =>
+                        Left(
+                          FatsecretApiError(
+                            s"An error occurred while parsing JSON result:\n Result: ${response.json}\n Error: $e"
+                          )
+                        )
+                      case Success(value) => Right(value)
+                    }
+                  case status => Left(FatsecretApiError(s"Unexpected status from Fatsecret API: $status"))
+                }
+              }
+          }
+          .getOrElse(Future.successful(Left(FatsecretApiError(s"Unexpected response from Fatsecret Auth API"))))
+      }
 
   override def searchFoods(
     query: String,
@@ -106,7 +148,7 @@ class RestFatsecretApiService @Inject() (wsClient: WSClient, cache: AsyncCacheAp
       }
 
   override def getAuthToken: Future[Either[DomainError, String]] = {
-    val dataParts = Map("grant_type" -> Seq("client_credentials"), "scope" -> Seq("basic"))
+    val dataParts = Map("grant_type" -> Seq("client_credentials"), "scope" -> Seq("basic premier"))
     wsClient
       .url(authBaseUrl)
       .withAuth(fatsecretConfig.clientId, fatsecretConfig.clientSecret, WSAuthScheme.BASIC)
@@ -122,4 +164,5 @@ class RestFatsecretApiService @Inject() (wsClient: WSClient, cache: AsyncCacheAp
 
 object RestFatsecretApiService {
   val defaultMax: Int = 50;
+  val defaultAutocompleteMaxResults: Int = 5;
 }

@@ -43,4 +43,12 @@ class NutritionController @Inject() (
         .recover(resultErrorAsyncHandler)
     }
 
+  def autocompleteFood(query: String, maxResults: Option[Int]): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      nutritionApi
+        .autcompleteFood(query, maxResults)
+        .map(handleEitherResult(_)(suggestions => Ok(Json.toJson(suggestions))))
+        .recover(resultErrorAsyncHandler)
+    }
+
 }

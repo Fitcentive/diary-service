@@ -35,6 +35,7 @@ POST     /api/diary/user/:userId/recently-viewed-foods                          
 # Nutrition endpoints
 GET      /api/diary/food/search                                                                 io.fitcentive.diary.controllers.NutritionController.searchFoodsByExpression(query: String, pageNumber: Option[Int] ?= None, maxResults: Option[Int] ?= None)
 GET      /api/diary/food/:foodId                                                                io.fitcentive.diary.controllers.NutritionController.getFoodById(foodId: String)
+GET      /api/diary/food/search/autocomplete                                                    io.fitcentive.diary.controllers.NutritionController.autocompleteFood(query: String, maxResults: Option[Int] ?= None)
 
 # Fitness user profile
 GET      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.getUserFitnessProfile(userId: java.util.UUID)
