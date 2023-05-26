@@ -64,8 +64,8 @@ spec:
             - secretRef:
                 name: diary-service-service-account-credentials
           env:
-            - name: JAVA_OPTS
-              value: "-Xmx128m -Xms128m"
+#            - name: JAVA_OPTS
+#              value: "-Xmx128m -Xms128m"
             - name: GCP_PROJECT_NAME
               value: "fitcentive-dev-02"
             - name: DB_HOST

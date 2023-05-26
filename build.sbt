@@ -47,3 +47,9 @@ dependencyOverrides ++= Seq(
 )
 
 Universal / javaOptions ++= Seq("-Dpidfile.path=/dev/null")
+
+Universal / javaOptions ++= Seq(
+  // -J params will be added as jvm parameters
+  "-J-Xmx128m",
+  "-J-Xms64m"
+)
