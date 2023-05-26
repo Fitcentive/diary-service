@@ -7,13 +7,15 @@ import io.fitcentive.diary.domain.errors.WgerApiError
 import io.fitcentive.diary.domain.wger.ExerciseDefinition
 import io.fitcentive.diary.services.{ExerciseService, SettingsService}
 import io.fitcentive.sdk.error.DomainError
+import play.api.cache.AsyncCacheApi
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class RestWgerApiService @Inject() (wsClient: WSClient, settingsService: SettingsService)(implicit ec: ExecutionContext)
-  extends ExerciseService {
+class RestWgerApiService @Inject() (wsClient: WSClient, settingsService: SettingsService, cache: AsyncCacheApi)(implicit
+  ec: ExecutionContext
+) extends ExerciseService {
 
   import RestWgerApiService._
 
@@ -21,14 +23,22 @@ class RestWgerApiService @Inject() (wsClient: WSClient, settingsService: Setting
   val baseUrl: String = s"${wgerConfig.host}/${wgerConfig.apiVersion}"
 
   override def getCompleteExerciseDetailedInfo: Future[Either[DomainError, Seq[ExerciseDefinition]]] =
-    wsClient
-      .url(s"$baseUrl/exerciseinfo?format=json&limit=$defaultMax")
-      .get()
-      .map { response =>
-        response.status match {
-          case Status.OK => Right((response.json \ "results").as[Seq[ExerciseDefinition]])
-          case status    => Left(WgerApiError(s"Unexpected status from Wger API: $status"))
-        }
+    cache
+      .getOrElseUpdate(wgerConfig.allExercisesCacheKey) {
+        wsClient
+          .url(s"$baseUrl/exerciseinfo?format=json&limit=$defaultMax")
+          .get()
+          .map { response =>
+            response.status match {
+              case Status.OK => Right((response.json \ "results").as[Seq[ExerciseDefinition]])
+              case status    => Left(WgerApiError(s"Unexpected status from Wger API: $status"))
+            }
+          }
+      }
+      .map { exercisesE =>
+        exercisesE
+          .map(Right.apply)
+          .getOrElse(Left(WgerApiError(s"Unexpected response from Wger API")))
       }
 
 }
