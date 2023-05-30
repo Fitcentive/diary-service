@@ -210,12 +210,8 @@ object AnormFoodDiaryRepository extends AnormOps {
       )
   }
 
-  // todo - exception is being thrown over here, need to inspect and check
   private case class FatsecretFoodCacheRow(food_id: String, food_data: Json, created_at: Instant, updated_at: Instant) {
     def toDomain: Either[FoodGetResult, FoodGetResultSingleServing] = {
-      print("-------------")
-      print(food_data)
-      print("-------------")
       decodeFoodData(food_data).getOrElse(throw new IllegalArgumentException("Unable to decode food data!"))
     }
   }
