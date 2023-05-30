@@ -2,7 +2,7 @@ package io.fitcentive.diary.domain.fatsecret
 
 import play.api.libs.json.{Json, OFormat}
 
-case class FoodSearchSuggestions(suggestions: FoodSearchSuggestion)
+case class FoodSearchSuggestions(suggestions: Option[FoodSearchSuggestion])
 object FoodSearchSuggestions {
   implicit lazy val format: OFormat[FoodSearchSuggestions] = Json.format[FoodSearchSuggestions]
 }
