@@ -1,6 +1,6 @@
 package io.fitcentive.diary.controllers
 
-import io.fitcentive.diary.api.{DiaryApi, ExerciseApi}
+import io.fitcentive.diary.api.DiaryApi
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.domain.payloads.{IntPayload, UUIDPayload}
@@ -10,7 +10,7 @@ import io.fitcentive.sdk.utils.PlayControllerOps
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import java.time.{Instant, LocalDate, ZoneOffset}
+import java.time.{LocalDate, ZoneOffset}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -71,6 +71,24 @@ class DiaryController @Inject() (
           .map(cardio => Ok)
           .recover(resultErrorAsyncHandler)
       }(request, userId)
+    }
+
+  def getAllDiaryEntriesForUserByDay(implicit
+    userId: UUID,
+    dateString: String,
+    offsetInMinutes: Int,
+  ): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getAllDiaryEntriesForUserByDay(
+            userId,
+            LocalDate.parse(dateString).atStartOfDay().toInstant(ZoneOffset.UTC),
+            offsetInMinutes
+          )
+          .map(entries => Ok(Json.toJson(entries)))
+          .recover(resultErrorAsyncHandler)
+      }
     }
 
   def getAllCardioWorkoutsForUserByDay(implicit

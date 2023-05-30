@@ -1,5 +1,6 @@
 package io.fitcentive.diary.api
 
+import io.fitcentive.diary.domain.diary.AllDiaryEntriesForDay
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository}
@@ -33,6 +34,25 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
   def deleteStrengthDiaryEntry(userId: UUID, strengthWorkoutEntryId: UUID): Future[Unit] =
     exerciseDiaryRepository
       .deleteStrengthWorkoutForUser(userId, strengthWorkoutEntryId)
+
+  def getAllDiaryEntriesForUserByDay(
+    userId: UUID,
+    day: Instant,
+    offsetInMinutes: Int
+  ): Future[AllDiaryEntriesForDay] = {
+    val windowStart = day.plus(-offsetInMinutes, ChronoUnit.MINUTES)
+    val windowEnd = windowStart.plus(1, ChronoUnit.DAYS)
+    for {
+      cardioEntries <- exerciseDiaryRepository.getAllCardioWorkoutsForDayByUser(userId = userId, windowStart, windowEnd)
+      strengthEntries <-
+        exerciseDiaryRepository.getAllStrengthWorkoutsForDayByUser(userId = userId, windowStart, windowEnd)
+      foodEntries <- foodDiaryRepository.getAllFoodEntriesForDayByUser(userId, windowStart, windowEnd)
+    } yield AllDiaryEntriesForDay(
+      cardioWorkouts = cardioEntries,
+      strengthWorkouts = strengthEntries,
+      foodEntries = foodEntries
+    )
+  }
 
   def getCardioEntriesForUserByDay(userId: UUID, day: Instant, offsetInMinutes: Int): Future[Seq[CardioWorkout]] = {
     val windowStart = day.plus(-offsetInMinutes, ChronoUnit.MINUTES);

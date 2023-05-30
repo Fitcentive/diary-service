@@ -9,6 +9,9 @@ GET      /api/diary/healthz                                                     
 # Exercise endpoints
 GET      /api/diary/exercise                                                                    io.fitcentive.diary.controllers.ExerciseController.getAllExerciseInfo
 
+# Get all diary entry endpoint
+GET      /api/diary/user/:userId/date/:dateString                                               io.fitcentive.diary.controllers.DiaryController.getAllDiaryEntriesForUserByDay(userId: java.util.UUID, dateString: String, offsetInMinutes: Int)
+
 # Cardio workout endpoints
 POST     /api/diary/user/:userId/cardio                                                         io.fitcentive.diary.controllers.DiaryController.addCardioEntryToDiary(userId: java.util.UUID)
 DELETE   /api/diary/user/:userId/cardio/:cardioEntryId                                          io.fitcentive.diary.controllers.DiaryController.deleteCardioEntryFromDiary(userId: java.util.UUID, cardioEntryId: java.util.UUID)

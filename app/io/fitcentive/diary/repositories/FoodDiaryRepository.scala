@@ -1,6 +1,8 @@
 package io.fitcentive.diary.repositories
 
 import com.google.inject.ImplementedBy
+import io.circe.Json
+import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodGetResultSingleServing}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.infrastructure.database.sql.AnormFoodDiaryRepository
 
@@ -17,4 +19,9 @@ trait FoodDiaryRepository {
   def getUserRecentlyViewedFoodIds(userId: UUID): Future[Seq[Int]]
   def deleteMostRecentlyViewedFoodForUser(userId: UUID, foodId: Int): Future[Unit]
   def upsertMostRecentlyViewedFoodForUser(userId: UUID, foodId: Int): Future[Unit]
+  def getCachedDataForFoodId(foodId: String): Future[Option[Either[FoodGetResult, FoodGetResultSingleServing]]]
+  def upsertCachedDataForFoodId(
+    foodId: String,
+    foodData: Json
+  ): Future[Either[FoodGetResult, FoodGetResultSingleServing]]
 }

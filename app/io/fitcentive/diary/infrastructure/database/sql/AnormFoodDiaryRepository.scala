@@ -1,6 +1,8 @@
 package io.fitcentive.diary.infrastructure.database.sql
 
-import anorm.{Macro, RowParser, SqlParser}
+import anorm.{Column, Macro, MetaDataItem, RowParser, SqlParser, TypeDoesNotMatch}
+import io.circe.{parser, Json}
+import io.fitcentive.diary.domain.fatsecret.{FoodGetResult, FoodGetResultSingleServing}
 import io.fitcentive.diary.domain.food.{FoodEntry, MealEntry}
 import io.fitcentive.sdk.infrastructure.contexts.DatabaseExecutionContext
 import io.fitcentive.sdk.infrastructure.database.DatabaseClient
@@ -9,10 +11,12 @@ import io.fitcentive.diary.repositories.FoodDiaryRepository
 import play.api.db.Database
 
 import java.time.Instant
-import java.util.{Date, UUID}
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 import scala.util.chaining.scalaUtilChainingOps
+import io.circe.syntax._
+import io.circe.generic.auto._
 
 @Singleton
 class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: DatabaseExecutionContext)
@@ -83,6 +87,28 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
     Future {
       executeSqlWithoutReturning(SQL_DELETE_FOOD_DIARY_ENTRY, Seq("userId" -> userId, "foodEntryId" -> id))
     }
+
+  override def getCachedDataForFoodId(
+    foodId: String
+  ): Future[Option[Either[FoodGetResult, FoodGetResultSingleServing]]] =
+    Future {
+      getRecordOpt[FatsecretFoodCacheRow](SQL_GET_FATSECRET_CACHED_FOOD_BY_FOOD_ID, "foodId" -> foodId)(
+        fatsecretFoodCacheRowParser
+      ).map(_.toDomain)
+    }
+
+  override def upsertCachedDataForFoodId(
+    foodId: String,
+    foodData: Json
+  ): Future[Either[FoodGetResult, FoodGetResultSingleServing]] =
+    Future {
+      Instant.now.pipe { now =>
+        executeSqlWithExpectedReturn[FatsecretFoodCacheRow](
+          SQL_UPSERT_FATSECRET_CACHED_FOOD_BY_FOOD_ID,
+          Seq("foodId" -> foodId, "foodData" -> foodData.asJson.toString(), "now" -> now)
+        )(fatsecretFoodCacheRowParser).toDomain
+      }
+    }
 }
 
 object AnormFoodDiaryRepository extends AnormOps {
@@ -140,6 +166,25 @@ object AnormFoodDiaryRepository extends AnormOps {
       |last_accessed = {now};
       |""".stripMargin
 
+  private val SQL_UPSERT_FATSECRET_CACHED_FOOD_BY_FOOD_ID: String =
+    """
+      |insert into fatsecret_food_cache (food_id, food_data, created_at, updated_at)
+      |values ({foodId}, {foodData}::jsonb, {now}, {now})
+      |on conflict (food_id)
+      |do
+      | update set 
+      |   food_data = {foodData}::jsonb,
+      |   updated_at = {now}
+      |returning * ;
+      |""".stripMargin
+
+  private val SQL_GET_FATSECRET_CACHED_FOOD_BY_FOOD_ID: String =
+    """
+      |select *
+      |from fatsecret_food_cache
+      |where food_id = {foodId} ;
+      |""".stripMargin
+
   private case class FoodEntryRow(
     id: UUID,
     user_id: UUID,
@@ -165,5 +210,48 @@ object AnormFoodDiaryRepository extends AnormOps {
       )
   }
 
+  // todo - exception is being thrown over here, need to inspect and check
+  private case class FatsecretFoodCacheRow(food_id: String, food_data: Json, created_at: Instant, updated_at: Instant) {
+    def toDomain: Either[FoodGetResult, FoodGetResultSingleServing] = {
+      print("-------------")
+      print(food_data)
+      print("-------------")
+      decodeFoodData(food_data).getOrElse(throw new IllegalArgumentException("Unable to decode food data!"))
+    }
+  }
+
+  implicit lazy val columnToJson: Column[Json] =
+    Column.nonNull { (value, meta) =>
+      val MetaDataItem(qualified, _, _) = meta
+      value match {
+        case json: org.postgresql.util.PGobject =>
+          Right(parser.parse(json.getValue).getOrElse(throw new Exception("Circe parsing exception")))
+        case _ =>
+          Left(
+            TypeDoesNotMatch(
+              s"Cannot convert $value: ${value.asInstanceOf[AnyRef].getClass} to Json for column $qualified"
+            )
+          )
+      }
+    }
+
+  private def decodeFoodData(foodData: Json): Option[Either[FoodGetResult, FoodGetResultSingleServing]] = {
+    foodData
+      .as[FoodGetResult]
+      .pipe {
+        case Right(value) =>
+          Some(Left(value))
+
+        case Left(_) =>
+          foodData
+            .as[FoodGetResultSingleServing]
+            .pipe {
+              case Right(value) => Some(Right(value))
+              case Left(_)      => Option.empty
+            }
+      }
+  }
+
   private val foodEntryRowParser: RowParser[FoodEntryRow] = Macro.namedParser[FoodEntryRow]
+  private val fatsecretFoodCacheRowParser: RowParser[FatsecretFoodCacheRow] = Macro.namedParser[FatsecretFoodCacheRow]
 }
