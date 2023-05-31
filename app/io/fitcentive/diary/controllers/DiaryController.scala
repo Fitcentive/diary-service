@@ -197,7 +197,7 @@ class DiaryController @Inject() (
       rejectIfNotEntitled {
         diaryApi
           .getUserMostRecentlyViewedFoodIds(userId)
-          .map(userIds => Ok(Json.toJson(userIds)))
+          .map(foodIds => Ok(Json.toJson(foodIds)))
           .recover(resultErrorAsyncHandler)
       }
     }

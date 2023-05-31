@@ -1,6 +1,7 @@
 package io.fitcentive.diary.api
 
 import cats.data.EitherT
+import cats.implicits._
 import io.circe.Json
 import io.fitcentive.diary.domain.errors.FatsecretApiError
 import io.fitcentive.diary.domain.fatsecret.{
@@ -34,6 +35,11 @@ class NutritionApi @Inject() (nutritionService: NutritionService, foodDiaryRepos
       pageNumber.fold(0)(identity),
       maxResults.fold(RestFatsecretApiService.defaultMax)(identity)
     )
+
+  def getFoodsByIds(
+    foodIds: Seq[String]
+  ): Future[Either[DomainError, Seq[Either[FoodGetResult, FoodGetResultSingleServing]]]] =
+    Future.sequence(foodIds.map(getFoodById)).map(_.sequence)
 
   def getFoodById(foodId: String): Future[Either[DomainError, Either[FoodGetResult, FoodGetResultSingleServing]]] = {
     foodDiaryRepository
