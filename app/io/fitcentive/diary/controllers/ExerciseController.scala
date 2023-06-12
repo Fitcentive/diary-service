@@ -32,4 +32,12 @@ class ExerciseController @Inject() (
         .recover(resultErrorAsyncHandler)
     }
 
+  def getExerciseInfoForWorkout(workoutId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit userRequest =>
+      exerciseApi
+        .getExerciseInfoForWorkoutId(workoutId)
+        .map(handleEitherResult(_)(exerciseDefinition => Ok(Json.toJson(exerciseDefinition))))
+        .recover(resultErrorAsyncHandler)
+    }
+
 }

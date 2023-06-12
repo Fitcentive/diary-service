@@ -8,6 +8,7 @@ GET      /api/diary/healthz                                                     
 
 # Exercise endpoints
 GET      /api/diary/exercise                                                                    io.fitcentive.diary.controllers.ExerciseController.getAllExerciseInfo
+GET      /api/diary/exercise/:workoutId                                                         io.fitcentive.diary.controllers.ExerciseController.getExerciseInfoForWorkout(workoutId: java.util.UUID)
 
 # Get all diary entry endpoint
 GET      /api/diary/user/:userId/date/:dateString                                               io.fitcentive.diary.controllers.DiaryController.getAllDiaryEntriesForUserByDay(userId: java.util.UUID, dateString: String, offsetInMinutes: Int)

@@ -9,6 +9,7 @@ import io.fitcentive.diary.services.{ExerciseService, SettingsService}
 import io.fitcentive.sdk.error.DomainError
 import play.api.cache.AsyncCacheApi
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -21,6 +22,25 @@ class RestWgerApiService @Inject() (wsClient: WSClient, settingsService: Setting
 
   val wgerConfig: WgerApiConfig = settingsService.exerciseApiConfig
   val baseUrl: String = s"${wgerConfig.host}/${wgerConfig.apiVersion}"
+
+  override def getExerciseInfoForWorkoutId(workoutId: UUID): Future[Either[DomainError, Option[ExerciseDefinition]]] =
+    cache
+      .getOrElseUpdate(wgerConfig.allExercisesCacheKey) {
+        wsClient
+          .url(s"$baseUrl/exerciseinfo?format=json&limit=$defaultMax")
+          .get()
+          .map { response =>
+            response.status match {
+              case Status.OK => Right((response.json \ "results").as[Seq[ExerciseDefinition]])
+              case status    => Left(WgerApiError(s"Unexpected status from Wger API: $status"))
+            }
+          }
+      }
+      .map { exercisesE =>
+        exercisesE
+          .map(e => Right.apply(e.find(_.uuid == workoutId)))
+          .getOrElse(Left(WgerApiError(s"Unexpected response from Wger API")))
+      }
 
   override def getCompleteExerciseDetailedInfo: Future[Either[DomainError, Seq[ExerciseDefinition]]] =
     cache
