@@ -54,6 +54,68 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
       executeSqlWithoutReturning(SQL_DELETE_ALL_STRENGTH_WORKOUT_ENTRIES, Seq("userId" -> userId))
     }
 
+  override def updateCardioWorkoutByIdForUser(
+    userId: UUID,
+    cardioDiaryEntryId: UUID,
+    update: CardioWorkout.Update
+  ): Future[CardioWorkout] =
+    Future {
+      Instant.now.pipe { now =>
+        executeSqlWithExpectedReturn[CardioWorkoutRow](
+          SQL_UPDATE_CARDIO_WORKOUT_FOR_USER_BY_ID,
+          Seq(
+            "id" -> cardioDiaryEntryId,
+            "userId" -> userId,
+            "cardioDate" -> update.cardioDate,
+            "durationInMinutes" -> update.durationInMinutes,
+            "caloriesBurned" -> update.caloriesBurned,
+            "meetupId" -> update.meetupId,
+            "now" -> now
+          )
+        )(cardioWorkoutRowParser).toDomain
+      }
+    }
+
+  override def updateStrengthWorkoutByIdForUser(
+    userId: UUID,
+    strengthDiaryEntryId: UUID,
+    update: StrengthWorkout.Update
+  ): Future[StrengthWorkout] =
+    Future {
+      Instant.now.pipe { now =>
+        executeSqlWithExpectedReturn[StrengthWorkoutRow](
+          SQL_UPDATE_AND_RETURN_STRENGTH_WORKOUT_FOR_USER_BY_ID(update.weightsInLbs),
+          Seq(
+            "id" -> strengthDiaryEntryId,
+            "userId" -> userId,
+            "exerciseDate" -> update.exerciseDate,
+            "sets" -> update.sets,
+            "reps" -> update.reps,
+            "caloriesBurned" -> update.caloriesBurned,
+            "meetupId" -> update.meetupId,
+            "now" -> now
+          )
+        )(strengthWorkoutRowParser).toDomain
+      }
+    }
+
+  override def getCardioWorkoutByIdForUser(userId: UUID, cardioDiaryEntryId: UUID): Future[Option[CardioWorkout]] =
+    Future {
+      getRecordOpt(SQL_GET_CARDIO_WORKOUT_FOR_USER_BY_ID, "userId" -> userId, "diaryEntryId" -> cardioDiaryEntryId)(
+        cardioWorkoutRowParser
+      ).map(_.toDomain)
+    }
+
+  override def getStrengthWorkoutByIdForUser(
+    userId: UUID,
+    strengthDiaryEntryId: UUID
+  ): Future[Option[StrengthWorkout]] =
+    Future {
+      getRecordOpt(SQL_GET_STRENGTH_WORKOUT_FOR_USER_BY_ID, "userId" -> userId, "diaryEntryId" -> strengthDiaryEntryId)(
+        strengthWorkoutRowParser
+      ).map(_.toDomain)
+    }
+
   override def getAllCardioWorkoutsForDayByUser(
     userId: UUID,
     windowStart: Instant,
@@ -161,6 +223,22 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |returning *;
       |""".stripMargin
 
+  private def SQL_UPDATE_AND_RETURN_STRENGTH_WORKOUT_FOR_USER_BY_ID(weightsInLbs: Seq[Long]): String =
+    s"""
+       |update strength
+       |set 
+       | exercise_date = {exerciseDate},
+       | sets = {sets},
+       | reps = {reps},
+       | weight_in_lbs = ${transformWeightsIntoSqlArray(weightsInLbs)},
+       | calories_burned = {caloriesBurned},
+       | meetup_id = {meetupId}::uuid,
+       | now = {now}
+       |where user_id = {userId}::uuid
+       |and id = {id}::uuid ;
+       |returning *;
+       |""".stripMargin
+
   private val SQL_GET_STRENGTH_WORKOUTS_FOR_USER_BY_DATE: String =
     """
       |select * 
@@ -218,6 +296,36 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |from user_recently_viewed_workouts
       |where user_id = {userId}::uuid
       |order by last_accessed desc ;
+      |""".stripMargin
+
+  private val SQL_UPDATE_CARDIO_WORKOUT_FOR_USER_BY_ID: String =
+    """
+      |update cardio_workouts
+      |set 
+      | cardio_date = {cardioDate},
+      | duration_in_minutes = {durationInMinutes},
+      | calories_burned = {caloriesBurned},
+      | meetup_id = {meetupId}::uuid,
+      | now = {now}
+      |where user_id = {userId}::uuid
+      |and id = {id}::uuid 
+      |returning * ;
+      |""".stripMargin
+
+  private val SQL_GET_CARDIO_WORKOUT_FOR_USER_BY_ID: String =
+    """
+      |select *
+      |from cardio_workouts
+      |where user_id = {userId}::uuid
+      |and id = {diaryEntryId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_GET_STRENGTH_WORKOUT_FOR_USER_BY_ID: String =
+    """
+      |select *
+      |from strength_workouts
+      |where user_id = {userId}::uuid
+      |and id = {diaryEntryId}::uuid ;
       |""".stripMargin
 
   private val SQL_DELETE_USER_RECENTLY_VIEWED_WORKOUTS: String =

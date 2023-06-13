@@ -11,6 +11,18 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[AnormExerciseDiaryRepository])
 trait ExerciseDiaryRepository {
+  def getCardioWorkoutByIdForUser(userId: UUID, cardioDiaryEntryId: UUID): Future[Option[CardioWorkout]]
+  def updateCardioWorkoutByIdForUser(
+    userId: UUID,
+    cardioDiaryEntryId: UUID,
+    update: CardioWorkout.Update
+  ): Future[CardioWorkout]
+  def getStrengthWorkoutByIdForUser(userId: UUID, strengthDiaryEntryId: UUID): Future[Option[StrengthWorkout]]
+  def updateStrengthWorkoutByIdForUser(
+    userId: UUID,
+    strengthDiaryEntryId: UUID,
+    update: StrengthWorkout.Update
+  ): Future[StrengthWorkout]
   def getAllCardioWorkoutsForDayByUser(
     userId: UUID,
     windowStart: Instant,

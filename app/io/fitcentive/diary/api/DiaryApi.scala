@@ -1,9 +1,11 @@
 package io.fitcentive.diary.api
 
+import cats.data.EitherT
 import io.fitcentive.diary.domain.diary.AllDiaryEntriesForDay
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository}
+import io.fitcentive.sdk.error.{DomainError, EntityNotFoundError}
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -22,6 +24,40 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
   def insertCardioDiaryEntry(userId: UUID, create: CardioWorkout.Create): Future[CardioWorkout] =
     exerciseDiaryRepository
       .insertCardioWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
+
+  def updateStrengthDiaryEntry(
+    userId: UUID,
+    diaryEntryId: UUID,
+    update: StrengthWorkout.Update
+  ): Future[Either[DomainError, StrengthWorkout]] =
+    (for {
+      entryOpt <-
+        EitherT.right[DomainError](exerciseDiaryRepository.getStrengthWorkoutByIdForUser(userId, diaryEntryId))
+      entry <- EitherT[Future, DomainError, StrengthWorkout](
+        entryOpt
+          .map(x => Future.successful(Right(x)))
+          .getOrElse(Future.successful(Left(EntityNotFoundError(s"No diary entry found for id: $diaryEntryId"))))
+      )
+      updatedEntry <- EitherT.right[DomainError](
+        exerciseDiaryRepository.updateStrengthWorkoutByIdForUser(userId, diaryEntryId, update)
+      )
+    } yield updatedEntry).value
+
+  def updateCardioDiaryEntry(
+    userId: UUID,
+    diaryEntryId: UUID,
+    update: CardioWorkout.Update
+  ): Future[Either[DomainError, CardioWorkout]] =
+    (for {
+      entryOpt <- EitherT.right[DomainError](exerciseDiaryRepository.getCardioWorkoutByIdForUser(userId, diaryEntryId))
+      entry <- EitherT[Future, DomainError, CardioWorkout](
+        entryOpt
+          .map(x => Future.successful(Right(x)))
+          .getOrElse(Future.successful(Left(EntityNotFoundError(s"No diary entry found for id: $diaryEntryId"))))
+      )
+      updatedEntry <-
+        EitherT.right[DomainError](exerciseDiaryRepository.updateCardioWorkoutByIdForUser(userId, diaryEntryId, update))
+    } yield updatedEntry).value
 
   def deleteCardioDiaryEntry(userId: UUID, cardioWorkoutEntryId: UUID): Future[Unit] =
     exerciseDiaryRepository

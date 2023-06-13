@@ -32,4 +32,14 @@ object CardioWorkout {
   object Create {
     implicit lazy val format: OFormat[CardioWorkout.Create] = Json.format[CardioWorkout.Create]
   }
+
+  case class Update(
+    cardioDate: Instant,
+    durationInMinutes: Option[Long],
+    caloriesBurned: Option[Double],
+    meetupId: Option[UUID],
+  )
+  object Update {
+    implicit lazy val format: OFormat[CardioWorkout.Update] = Json.format[CardioWorkout.Update]
+  }
 }

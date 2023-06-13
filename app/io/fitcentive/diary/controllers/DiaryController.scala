@@ -29,6 +29,32 @@ class DiaryController @Inject() (
   // --------------------------------
   // Exercise Diary API methods
   // --------------------------------
+  def updateCardioDiaryEntry(implicit userId: UUID, cardioEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        validateJson[CardioWorkout.Update](request.body.asJson) { updatePayload =>
+          diaryApi
+            .updateCardioDiaryEntry(userId, cardioEntryId, updatePayload)
+            .map(handleEitherResult(_)(cardioEntry => Ok(Json.toJson(cardioEntry))))
+            .recover(resultErrorAsyncHandler)
+            .recover(resultErrorAsyncHandler)
+        }
+      }(request, userId)
+    }
+
+  def updateStrengthDiaryEntry(implicit userId: UUID, strengthEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        validateJson[StrengthWorkout.Update](request.body.asJson) { updatePayload =>
+          diaryApi
+            .updateStrengthDiaryEntry(userId, strengthEntryId, updatePayload)
+            .map(handleEitherResult(_)(strengthEntry => Ok(Json.toJson(strengthEntry))))
+            .recover(resultErrorAsyncHandler)
+            .recover(resultErrorAsyncHandler)
+        }
+      }(request, userId)
+    }
+
   def addCardioEntryToDiary(implicit userId: UUID): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
