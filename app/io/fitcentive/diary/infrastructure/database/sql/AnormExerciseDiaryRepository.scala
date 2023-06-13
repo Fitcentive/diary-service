@@ -225,7 +225,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
 
   private def SQL_UPDATE_AND_RETURN_STRENGTH_WORKOUT_FOR_USER_BY_ID(weightsInLbs: Seq[Long]): String =
     s"""
-       |update strength
+       |update strength_workouts
        |set 
        | exercise_date = {exerciseDate},
        | sets = {sets},
@@ -233,10 +233,10 @@ object AnormExerciseDiaryRepository extends AnormOps {
        | weight_in_lbs = ${transformWeightsIntoSqlArray(weightsInLbs)},
        | calories_burned = {caloriesBurned},
        | meetup_id = {meetupId}::uuid,
-       | now = {now}
+       | updated_at = {now}
        |where user_id = {userId}::uuid
-       |and id = {id}::uuid ;
-       |returning *;
+       |and id = {id}::uuid
+       |returning * ;
        |""".stripMargin
 
   private val SQL_GET_STRENGTH_WORKOUTS_FOR_USER_BY_DATE: String =
@@ -306,7 +306,7 @@ object AnormExerciseDiaryRepository extends AnormOps {
       | duration_in_minutes = {durationInMinutes},
       | calories_burned = {caloriesBurned},
       | meetup_id = {meetupId}::uuid,
-      | now = {now}
+      | updated_at = {now}
       |where user_id = {userId}::uuid
       |and id = {id}::uuid 
       |returning * ;
