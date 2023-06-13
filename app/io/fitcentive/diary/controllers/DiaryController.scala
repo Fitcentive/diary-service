@@ -37,7 +37,6 @@ class DiaryController @Inject() (
             .updateCardioDiaryEntry(userId, cardioEntryId, updatePayload)
             .map(handleEitherResult(_)(cardioEntry => Ok(Json.toJson(cardioEntry))))
             .recover(resultErrorAsyncHandler)
-            .recover(resultErrorAsyncHandler)
         }
       }(request, userId)
     }
@@ -49,7 +48,6 @@ class DiaryController @Inject() (
           diaryApi
             .updateStrengthDiaryEntry(userId, strengthEntryId, updatePayload)
             .map(handleEitherResult(_)(strengthEntry => Ok(Json.toJson(strengthEntry))))
-            .recover(resultErrorAsyncHandler)
             .recover(resultErrorAsyncHandler)
         }
       }(request, userId)
@@ -194,6 +192,18 @@ class DiaryController @Inject() (
           .map(foods => Ok(Json.toJson(foods)))
           .recover(resultErrorAsyncHandler)
       }
+    }
+
+  def updateFoodDiaryEntry(implicit userId: UUID, foodEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        validateJson[FoodEntry.Update](request.body.asJson) { updatePayload =>
+          diaryApi
+            .updateFoodDiaryEntry(userId, foodEntryId, updatePayload)
+            .map(handleEitherResult(_)(foodEntry => Ok(Json.toJson(foodEntry))))
+            .recover(resultErrorAsyncHandler)
+        }
+      }(request, userId)
     }
 
   def addFoodEntryToDiary(implicit userId: UUID): Action[AnyContent] =

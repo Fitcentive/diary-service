@@ -25,4 +25,9 @@ object FoodEntry {
     implicit lazy val format: OFormat[FoodEntry.Create] = Json.format[FoodEntry.Create]
   }
 
+  case class Update(servingId: Int, numberOfServings: Double, entryDate: Instant)
+  object Update {
+    implicit lazy val format: OFormat[FoodEntry.Update] = Json.format[FoodEntry.Update]
+  }
+
 }

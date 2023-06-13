@@ -5,7 +5,7 @@ import io.fitcentive.diary.domain.diary.AllDiaryEntriesForDay
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository}
-import io.fitcentive.sdk.error.{DomainError, EntityNotFoundError}
+import io.fitcentive.sdk.error.{DomainError, EntityNotAccessible, EntityNotFoundError}
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -38,6 +38,10 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
           .map(x => Future.successful(Right(x)))
           .getOrElse(Future.successful(Left(EntityNotFoundError(s"No diary entry found for id: $diaryEntryId"))))
       )
+      _ <- EitherT[Future, DomainError, StrengthWorkout] {
+        if (entry.userId == userId) Future.successful(Right(entry))
+        else Future.successful(Left(EntityNotAccessible("Cannot update a diary entry that user did not create!")))
+      }
       updatedEntry <- EitherT.right[DomainError](
         exerciseDiaryRepository.updateStrengthWorkoutByIdForUser(userId, diaryEntryId, update)
       )
@@ -55,6 +59,10 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
           .map(x => Future.successful(Right(x)))
           .getOrElse(Future.successful(Left(EntityNotFoundError(s"No diary entry found for id: $diaryEntryId"))))
       )
+      _ <- EitherT[Future, DomainError, CardioWorkout] {
+        if (entry.userId == userId) Future.successful(Right(entry))
+        else Future.successful(Left(EntityNotAccessible("Cannot update a diary entry that user did not create!")))
+      }
       updatedEntry <-
         EitherT.right[DomainError](exerciseDiaryRepository.updateCardioWorkoutByIdForUser(userId, diaryEntryId, update))
     } yield updatedEntry).value
@@ -127,6 +135,28 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
   // --------------------------------
   // Food Diary API methods
   // --------------------------------
+  def updateFoodDiaryEntry(
+    userId: UUID,
+    foodDiaryEntryID: UUID,
+    update: FoodEntry.Update
+  ): Future[Either[DomainError, FoodEntry]] =
+    (for {
+      entryOpt <- EitherT.right[DomainError](foodDiaryRepository.getFoodEntryForUserById(userId, foodDiaryEntryID))
+      entry <- EitherT[Future, DomainError, FoodEntry](
+        entryOpt
+          .map(x => Future.successful(Right(x)))
+          .getOrElse(
+            Future.successful(Left(EntityNotFoundError(s"No food diary entry found for id: $foodDiaryEntryID")))
+          )
+      )
+      _ <- EitherT[Future, DomainError, FoodEntry] {
+        if (entry.userId == userId) Future.successful(Right(entry))
+        else Future.successful(Left(EntityNotAccessible("Cannot update a diary entry that user did not create!")))
+      }
+      updatedEntry <-
+        EitherT.right[DomainError](foodDiaryRepository.updateFoodEntryForUserById(userId, foodDiaryEntryID, update))
+    } yield updatedEntry).value
+
   def insertFoodDiaryEntry(userId: UUID, create: FoodEntry.Create): Future[FoodEntry] =
     foodDiaryRepository
       .insertFoodDiaryEntry(id = UUID.randomUUID(), userId = userId, create = create)

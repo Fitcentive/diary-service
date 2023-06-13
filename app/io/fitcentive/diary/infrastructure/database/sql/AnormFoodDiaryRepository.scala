@@ -50,6 +50,33 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
       executeSqlWithoutReturning(SQL_DELETE_ALL_FOOD_DIARY_ENTRIES, Seq("userId" -> userId))
     }
 
+  override def getFoodEntryForUserById(userId: UUID, foodDiaryEntryId: UUID): Future[Option[FoodEntry]] =
+    Future {
+      getRecordOpt(SQL_GET_FOOD_ENTRY_FOR_USER_BY_ID, "userId" -> userId, "id" -> foodDiaryEntryId)(foodEntryRowParser)
+        .map(_.toDomain)
+    }
+
+  override def updateFoodEntryForUserById(
+    userId: UUID,
+    foodDiaryEntryId: UUID,
+    update: FoodEntry.Update
+  ): Future[FoodEntry] =
+    Future {
+      Instant.now.pipe { now =>
+        executeSqlWithExpectedReturn(
+          SQL_UPDATE_FOOD_ENTRY_FOR_USER_BY_ID,
+          Seq(
+            "userId" -> userId,
+            "id" -> foodDiaryEntryId,
+            "servingId" -> update.servingId,
+            "numberOfServings" -> update.numberOfServings,
+            "entryDate" -> update.entryDate,
+            "now" -> now,
+          )
+        )(foodEntryRowParser).toDomain
+      }
+    }
+
   override def getAllFoodEntriesForDayByUser(
     userId: UUID,
     windowStart: Instant,
@@ -131,6 +158,27 @@ object AnormFoodDiaryRepository extends AnormOps {
       |insert into food_entries (id, user_id, food_id, serving_id, number_of_servings, meal_entry, entry_date, created_at, updated_at)
       |values ({id}::uuid, {userId}::uuid, {foodId}, {servingId}, {numberOfServings}, {mealEntry}, {entryDate}, {now}, {now})
       |returning *;
+      |""".stripMargin
+
+  private val SQL_UPDATE_FOOD_ENTRY_FOR_USER_BY_ID: String =
+    """
+      |update food_entries
+      |set
+      | serving_id = {servingId},
+      | number_of_servings = {numberOfServings},
+      | entry_date = {entryDate},
+      | updated_at = {now}
+      |where user_id = {userId}::uuid
+      |and id = {id}::uuid 
+      |returning *;
+      |""".stripMargin
+
+  private val SQL_GET_FOOD_ENTRY_FOR_USER_BY_ID: String =
+    """
+      |select *
+      |from food_entries
+      |where user_id = {userId}::uuid
+      |and id = {id}::uuid ;
       |""".stripMargin
 
   private val SQL_GET_FOOD_ENTRIES_FOR_USER_BY_DATE: String =
