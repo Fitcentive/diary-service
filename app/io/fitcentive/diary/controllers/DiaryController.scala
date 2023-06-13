@@ -41,6 +41,16 @@ class DiaryController @Inject() (
       }(request, userId)
     }
 
+  def getCardioDiaryEntry(implicit userId: UUID, cardioEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getCardioDiaryEntry(userId, cardioEntryId)
+          .map(handleEitherResult(_)(cardioEntry => Ok(Json.toJson(cardioEntry))))
+          .recover(resultErrorAsyncHandler)
+      }(request, userId)
+    }
+
   def updateStrengthDiaryEntry(implicit userId: UUID, strengthEntryId: UUID): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
@@ -50,6 +60,16 @@ class DiaryController @Inject() (
             .map(handleEitherResult(_)(strengthEntry => Ok(Json.toJson(strengthEntry))))
             .recover(resultErrorAsyncHandler)
         }
+      }(request, userId)
+    }
+
+  def getStrengthDiaryEntry(implicit userId: UUID, strengthEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getStrengthDiaryEntry(userId, strengthEntryId)
+          .map(handleEitherResult(_)(strengthEntry => Ok(Json.toJson(strengthEntry))))
+          .recover(resultErrorAsyncHandler)
       }(request, userId)
     }
 
@@ -203,6 +223,16 @@ class DiaryController @Inject() (
             .map(handleEitherResult(_)(foodEntry => Ok(Json.toJson(foodEntry))))
             .recover(resultErrorAsyncHandler)
         }
+      }(request, userId)
+    }
+
+  def getFoodDiaryEntry(implicit userId: UUID, foodDiaryEntryId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getFoodDiaryEntry(userId, foodDiaryEntryId)
+          .map(handleEitherResult(_)(foodEntry => Ok(Json.toJson(foodEntry))))
+          .recover(resultErrorAsyncHandler)
       }(request, userId)
     }
 
