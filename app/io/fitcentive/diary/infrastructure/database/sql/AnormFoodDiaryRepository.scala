@@ -136,6 +136,12 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
         )(fatsecretFoodCacheRowParser).toDomain
       }
     }
+
+  override def getFoodEntriesByIds(foodDiaryEntryIds: Seq[UUID]): Future[Seq[FoodEntry]] =
+    Future {
+      getRecords(SQL_GET_FOOD_ENTRIES_BY_IDS, "foodDiaryEntryIds" -> foodDiaryEntryIds)(foodEntryRowParser)
+        .map(_.toDomain)
+    }
 }
 
 object AnormFoodDiaryRepository extends AnormOps {
@@ -179,6 +185,13 @@ object AnormFoodDiaryRepository extends AnormOps {
       |from food_entries
       |where user_id = {userId}::uuid
       |and id = {id}::uuid ;
+      |""".stripMargin
+
+  private val SQL_GET_FOOD_ENTRIES_BY_IDS: String =
+    """
+      |select * 
+      |from food_entries
+      |where id in ({foodDiaryEntryIds}) ;
       |""".stripMargin
 
   private val SQL_GET_FOOD_ENTRIES_FOR_USER_BY_DATE: String =

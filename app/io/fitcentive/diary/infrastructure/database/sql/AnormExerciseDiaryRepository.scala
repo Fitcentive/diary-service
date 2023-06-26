@@ -201,6 +201,19 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
         Seq("userId" -> userId, "strengthWorkoutEntryId" -> id)
       )
     }
+
+  override def getCardioWorkoutsById(cardioDiaryEntryIds: Seq[UUID]): Future[Seq[CardioWorkout]] =
+    Future {
+      getRecords(SQL_GET_CARDIO_WORKOUTS_BY_ID, "cardioDiaryEntryIds" -> cardioDiaryEntryIds)(cardioWorkoutRowParser)
+        .map(_.toDomain)
+    }
+
+  override def getStrengthWorkoutsByIds(strengthDiaryEntryIds: Seq[UUID]): Future[Seq[StrengthWorkout]] =
+    Future {
+      getRecords(SQL_GET_STRENGTH_WORKOUTS_BY_ID, "strengthDiaryEntryIds" -> strengthDiaryEntryIds)(
+        strengthWorkoutRowParser
+      ).map(_.toDomain)
+    }
 }
 
 object AnormExerciseDiaryRepository extends AnormOps {
@@ -318,6 +331,20 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |from cardio_workouts
       |where user_id = {userId}::uuid
       |and id = {diaryEntryId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_GET_CARDIO_WORKOUTS_BY_ID: String =
+    """
+      |select *
+      |from cardio_workouts
+      |where id in ({cardioDiaryEntryIds}) ;
+      |""".stripMargin
+
+  private val SQL_GET_STRENGTH_WORKOUTS_BY_ID: String =
+    """
+      |select *
+      |from strength_workouts
+      |where id in ({strengthDiaryEntryIds}) ;
       |""".stripMargin
 
   private val SQL_GET_STRENGTH_WORKOUT_FOR_USER_BY_ID: String =

@@ -3,7 +3,7 @@ package io.fitcentive.diary.controllers
 import io.fitcentive.diary.api.DiaryApi
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
-import io.fitcentive.diary.domain.payloads.{IntPayload, UUIDPayload}
+import io.fitcentive.diary.domain.payloads.{DiaryEntryIdsPayload, IntPayload, UUIDPayload}
 import io.fitcentive.diary.infrastructure.utils.ServerErrorHandler
 import io.fitcentive.sdk.play.{InternalAuthAction, UserAuthAction}
 import io.fitcentive.sdk.utils.PlayControllerOps
@@ -277,6 +277,19 @@ class DiaryController @Inject() (
             .map(_ => NoContent)
             .recover(resultErrorAsyncHandler)
         }
+      }
+    }
+
+  //----------------------------------
+  // Internal routes
+  //----------------------------------
+  def getDiaryEntriesForUserByIds: Action[AnyContent] =
+    internalAuthAction.async { implicit request =>
+      validateJson[DiaryEntryIdsPayload](request.body.asJson) { payload =>
+        diaryApi
+          .getDiaryEntriesByIds(payload)
+          .map(entries => Ok(Json.toJson(entries)))
+          .recover(resultErrorAsyncHandler)
       }
     }
 }

@@ -4,6 +4,7 @@ import cats.data.EitherT
 import io.fitcentive.diary.domain.diary.AllDiaryEntriesForDay
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
+import io.fitcentive.diary.domain.payloads.DiaryEntryIdsPayload
 import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository}
 import io.fitcentive.sdk.error.{DomainError, EntityNotAccessible, EntityNotFoundError}
 
@@ -120,6 +121,24 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
       strengthEntries <-
         exerciseDiaryRepository.getAllStrengthWorkoutsForDayByUser(userId = userId, windowStart, windowEnd)
       foodEntries <- foodDiaryRepository.getAllFoodEntriesForDayByUser(userId, windowStart, windowEnd)
+    } yield AllDiaryEntriesForDay(
+      cardioWorkouts = cardioEntries,
+      strengthWorkouts = strengthEntries,
+      foodEntries = foodEntries
+    )
+  }
+
+  def getDiaryEntriesByIds(diaryEntriesPayload: DiaryEntryIdsPayload): Future[AllDiaryEntriesForDay] = {
+    for {
+      _ <- Future.unit
+      cardioEntriesFut = exerciseDiaryRepository.getCardioWorkoutsById(diaryEntriesPayload.cardioEntryIds)
+      strengthEntriesFut = exerciseDiaryRepository.getStrengthWorkoutsByIds(diaryEntriesPayload.strengthEntryIds)
+      foodEntriesFut = foodDiaryRepository.getFoodEntriesByIds(diaryEntriesPayload.foodEntryIds)
+
+      cardioEntries <- cardioEntriesFut
+      strengthEntries <- strengthEntriesFut
+      foodEntries <- foodEntriesFut
+
     } yield AllDiaryEntriesForDay(
       cardioWorkouts = cardioEntries,
       strengthWorkouts = strengthEntries,

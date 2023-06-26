@@ -14,6 +14,7 @@ import scala.concurrent.Future
 trait FoodDiaryRepository {
   def getAllFoodEntriesForDayByUser(userId: UUID, windowStart: Instant, windowEnd: Instant): Future[Seq[FoodEntry]]
   def getFoodEntryForUserById(userId: UUID, foodDiaryEntryId: UUID): Future[Option[FoodEntry]]
+  def getFoodEntriesByIds(foodDiaryEntryIds: Seq[UUID]): Future[Seq[FoodEntry]]
   def updateFoodEntryForUserById(userId: UUID, foodDiaryEntryId: UUID, update: FoodEntry.Update): Future[FoodEntry]
   def insertFoodDiaryEntry(id: UUID, userId: UUID, create: FoodEntry.Create): Future[FoodEntry]
   def deleteFoodDiaryEntry(userId: UUID, id: UUID): Future[Unit]
