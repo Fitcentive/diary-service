@@ -6,6 +6,7 @@ import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.domain.payloads.DiaryEntryIdsPayload
 import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository}
+import io.fitcentive.diary.services.MeetupService
 import io.fitcentive.sdk.error.{DomainError, EntityNotAccessible, EntityNotFoundError}
 
 import java.time.Instant
@@ -15,9 +16,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, foodDiaryRepository: FoodDiaryRepository)(
-  implicit ec: ExecutionContext
-) {
+class DiaryApi @Inject() (
+  exerciseDiaryRepository: ExerciseDiaryRepository,
+  foodDiaryRepository: FoodDiaryRepository,
+  meetupService: MeetupService
+)(implicit ec: ExecutionContext) {
 
   // --------------------------------
   // Exercise Diary API methods
@@ -98,16 +101,20 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
     } yield entry).value
 
   def deleteCardioDiaryEntry(userId: UUID, cardioWorkoutEntryId: UUID): Future[Unit] =
-    exerciseDiaryRepository
-      .deleteCardioWorkoutForUser(userId, cardioWorkoutEntryId)
+    for {
+      _ <- exerciseDiaryRepository.deleteCardioWorkoutForUser(userId, cardioWorkoutEntryId)
+      _ <- meetupService.deleteCardioEntryAssociatedToMeetup(cardioWorkoutEntryId)
+    } yield ()
 
   def insertStrengthDiaryEntry(userId: UUID, create: StrengthWorkout.Create): Future[StrengthWorkout] =
     exerciseDiaryRepository
       .insertStrengthWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
 
   def deleteStrengthDiaryEntry(userId: UUID, strengthWorkoutEntryId: UUID): Future[Unit] =
-    exerciseDiaryRepository
-      .deleteStrengthWorkoutForUser(userId, strengthWorkoutEntryId)
+    for {
+      _ <- exerciseDiaryRepository.deleteStrengthWorkoutForUser(userId, strengthWorkoutEntryId)
+      _ <- meetupService.deleteCardioEntryAssociatedToMeetup(strengthWorkoutEntryId)
+    } yield ()
 
   def getAllDiaryEntriesForUserByDay(
     userId: UUID,
@@ -226,8 +233,10 @@ class DiaryApi @Inject() (exerciseDiaryRepository: ExerciseDiaryRepository, food
       .insertFoodDiaryEntry(id = UUID.randomUUID(), userId = userId, create = create)
 
   def deleteFoodDiaryEntry(userId: UUID, foodEntryId: UUID): Future[Unit] =
-    foodDiaryRepository
-      .deleteFoodDiaryEntry(userId, foodEntryId)
+    for {
+      _ <- foodDiaryRepository.deleteFoodDiaryEntry(userId, foodEntryId)
+      _ <- meetupService.deleteFoodEntryAssociatedToMeetup(foodEntryId)
+    } yield ()
 
   def getFoodEntriesForUserByDay(userId: UUID, day: Instant, offsetInMinutes: Int): Future[Seq[FoodEntry]] = {
     val windowStart = day.plus(-offsetInMinutes, ChronoUnit.MINUTES)

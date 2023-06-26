@@ -11,6 +11,7 @@ trait SettingsService {
   def serviceAccountStringCredentials: String
   def gcpConfig: GcpConfig
   def authServiceConfig: ServerConfig
+  def meetupServiceConfig: ServerConfig
   def jwtConfig: JwtConfig
   def keycloakServerUrl: String
   def secretConfig: SecretConfig

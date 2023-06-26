@@ -41,6 +41,9 @@ class AppConfigService @Inject() (config: Configuration) extends SettingsService
 
   override def authServiceConfig: ServerConfig = ServerConfig.fromConfig(config.get[Config]("services.auth-service"))
 
+  override def meetupServiceConfig: ServerConfig =
+    ServerConfig.fromConfig(config.get[Config]("services.meetup-service"))
+
   override def gcpConfig: GcpConfig =
     GcpConfig(project = config.get[String]("gcp.project"))
 

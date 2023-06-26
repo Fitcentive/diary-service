@@ -96,6 +96,10 @@ spec:
               value: "http://image-service.image-service"
             - name: IMAGE_SERVICE_PORT
               value: "10260"
+            - name: MEETUP_SERVICE_HOST
+              value: "http://meetup-service.meetup"
+            - name: MEETUP_SERVICE_PORT
+              value: "9000"
             - name: JWT_ISSUER
               value: "https://auth.fitcentive.xyz"
             - name: KEYCLOAK_SERVER_URL
