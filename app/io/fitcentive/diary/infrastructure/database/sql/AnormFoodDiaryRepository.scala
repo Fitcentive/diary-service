@@ -72,6 +72,7 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
             "numberOfServings" -> update.numberOfServings,
             "entryDate" -> update.entryDate,
             "now" -> now,
+            "meetupId" -> update.meetupId,
           )
         )(foodEntryRowParser).toDomain
       }
@@ -104,7 +105,8 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
             "numberOfServings" -> create.numberOfServings,
             "mealEntry" -> MealEntry(create.mealEntry).stringValue,
             "entryDate" -> create.entryDate,
-            "now" -> now
+            "now" -> now,
+            "meetupId" -> create.meetupId,
           )
         )(foodEntryRowParser).toDomain
       }
@@ -161,8 +163,8 @@ object AnormFoodDiaryRepository extends AnormOps {
 
   private val SQL_INSERT_AND_RETURN_FOOD_ENTRY: String =
     """
-      |insert into food_entries (id, user_id, food_id, serving_id, number_of_servings, meal_entry, entry_date, created_at, updated_at)
-      |values ({id}::uuid, {userId}::uuid, {foodId}, {servingId}, {numberOfServings}, {mealEntry}, {entryDate}, {now}, {now})
+      |insert into food_entries (id, user_id, food_id, serving_id, number_of_servings, meal_entry, entry_date, created_at, updated_at, meetup_id)
+      |values ({id}::uuid, {userId}::uuid, {foodId}, {servingId}, {numberOfServings}, {mealEntry}, {entryDate}, {now}, {now}, {meetupId}::uuid)
       |returning *;
       |""".stripMargin
 
@@ -173,6 +175,7 @@ object AnormFoodDiaryRepository extends AnormOps {
       | serving_id = {servingId},
       | number_of_servings = {numberOfServings},
       | entry_date = {entryDate},
+      | meetup_id = {meetupId}::uuid,
       | updated_at = {now}
       |where user_id = {userId}::uuid
       |and id = {id}::uuid 
@@ -255,7 +258,8 @@ object AnormFoodDiaryRepository extends AnormOps {
     meal_entry: String,
     entry_date: Instant,
     created_at: Instant,
-    updated_at: Instant
+    updated_at: Instant,
+    meetup_id: Option[UUID],
   ) {
     def toDomain: FoodEntry =
       FoodEntry(
@@ -267,7 +271,8 @@ object AnormFoodDiaryRepository extends AnormOps {
         mealEntry = MealEntry(meal_entry),
         entryDate = entry_date,
         createdAt = created_at,
-        updatedAt = updated_at
+        updatedAt = updated_at,
+        meetupId = meetup_id,
       )
   }
 
