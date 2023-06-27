@@ -296,14 +296,14 @@ object AnormExerciseDiaryRepository extends AnormOps {
     """
       |update cardio_workouts
       |set meetup_id = null
-      |where id = {cardioEntryId} ;
+      |where id = {cardioEntryId}::uuid ;
       |""".stripMargin
 
   private val SQL_DISSOCIATE_MEETUP_FROM_STRENGTH_ENTRY: String =
     """
       |update strength_workouts
       |set meetup_id = null
-      |where id = {strengthEntryId} ;
+      |where id = {strengthEntryId}::uuid ;
       |""".stripMargin
 
   private val SQL_DELETE_ALL_CARDIO_WORKOUT_ENTRIES: String =

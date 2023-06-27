@@ -226,7 +226,7 @@ object AnormFoodDiaryRepository extends AnormOps {
     """
       |update food_entries
       |set meetup_id = null
-      |where id = {foodEntryId} ;
+      |where id = {foodEntryId}::uuid ;
       |""".stripMargin
 
   private val SQL_DELETE_USER_RECENTLY_VIEWED_FOODS: String =
