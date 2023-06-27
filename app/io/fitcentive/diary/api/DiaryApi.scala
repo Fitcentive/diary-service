@@ -113,7 +113,7 @@ class DiaryApi @Inject() (
   def deleteStrengthDiaryEntry(userId: UUID, strengthWorkoutEntryId: UUID): Future[Unit] =
     for {
       _ <- exerciseDiaryRepository.deleteStrengthWorkoutForUser(userId, strengthWorkoutEntryId)
-      _ <- meetupService.deleteCardioEntryAssociatedToMeetup(strengthWorkoutEntryId)
+      _ <- meetupService.deleteStrengthEntryAssociatedToMeetup(strengthWorkoutEntryId)
     } yield ()
 
   def getAllDiaryEntriesForUserByDay(
