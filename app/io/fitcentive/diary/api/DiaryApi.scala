@@ -138,9 +138,20 @@ class DiaryApi @Inject() (
   def getDiaryEntriesByIds(diaryEntriesPayload: DiaryEntryIdsPayload): Future[AllDiaryEntriesForDay] = {
     for {
       _ <- Future.unit
-      cardioEntriesFut = exerciseDiaryRepository.getCardioWorkoutsById(diaryEntriesPayload.cardioEntryIds)
-      strengthEntriesFut = exerciseDiaryRepository.getStrengthWorkoutsByIds(diaryEntriesPayload.strengthEntryIds)
-      foodEntriesFut = foodDiaryRepository.getFoodEntriesByIds(diaryEntriesPayload.foodEntryIds)
+      cardioEntriesFut =
+        if (diaryEntriesPayload.cardioEntryIds.nonEmpty)
+          exerciseDiaryRepository.getCardioWorkoutsById(diaryEntriesPayload.cardioEntryIds)
+        else Future.successful(Seq.empty)
+
+      strengthEntriesFut =
+        if (diaryEntriesPayload.strengthEntryIds.nonEmpty)
+          exerciseDiaryRepository.getStrengthWorkoutsByIds(diaryEntriesPayload.strengthEntryIds)
+        else Future.successful(Seq.empty)
+
+      foodEntriesFut =
+        if (diaryEntriesPayload.foodEntryIds.nonEmpty)
+          foodDiaryRepository.getFoodEntriesByIds(diaryEntriesPayload.foodEntryIds)
+        else Future.successful(Seq.empty)
 
       cardioEntries <- cardioEntriesFut
       strengthEntries <- strengthEntriesFut
@@ -262,5 +273,14 @@ class DiaryApi @Inject() (
         }
       _ <- foodDiaryRepository.upsertMostRecentlyViewedFoodForUser(userId, foodId)
     } yield ()
+
+  def dissociateFoodDiaryEntryFromMeetup(foodEntryId: UUID): Future[Unit] =
+    foodDiaryRepository.dissociateMeetupFromFoodEntryById(foodEntryId)
+
+  def dissociateCardioDiaryEntryFromMeetup(cardioEntryId: UUID): Future[Unit] =
+    exerciseDiaryRepository.dissociateMeetupFromCardioEntryById(cardioEntryId)
+
+  def dissociateStrengthDiaryEntryFromMeetup(strengthEntryId: UUID): Future[Unit] =
+    exerciseDiaryRepository.dissociateMeetupFromStrengthEntryById(strengthEntryId)
 
 }

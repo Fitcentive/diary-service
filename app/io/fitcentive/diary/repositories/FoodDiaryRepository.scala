@@ -12,6 +12,7 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[AnormFoodDiaryRepository])
 trait FoodDiaryRepository {
+  def dissociateMeetupFromFoodEntryById(foodEntryId: UUID): Future[Unit]
   def getAllFoodEntriesForDayByUser(userId: UUID, windowStart: Instant, windowEnd: Instant): Future[Seq[FoodEntry]]
   def getFoodEntryForUserById(userId: UUID, foodDiaryEntryId: UUID): Future[Option[FoodEntry]]
   def getFoodEntriesByIds(foodDiaryEntryIds: Seq[UUID]): Future[Seq[FoodEntry]]

@@ -57,3 +57,7 @@ PUT      /api/diary/user/:userId/profile                                        
 DELETE  /api/internal/diary/user/:userId                                                        io.fitcentive.diary.controllers.UserController.deleteUserDiaryData(userId: java.util.UUID)
 
 POST    /api/internal/diary/get-by-id                                                           io.fitcentive.diary.controllers.DiaryController.getDiaryEntriesForUserByIds
+
+DELETE  /api/internal/diary/food/:foodEntryId/meetup                                            io.fitcentive.diary.controllers.DiaryController.dissociateFoodDiaryEntryFromMeetup(foodEntryId: java.util.UUID)
+DELETE  /api/internal/diary/strength/:strengthEntryId/meetup                                    io.fitcentive.diary.controllers.DiaryController.dissociateStrengthDiaryEntryFromMeetup(strengthEntryId: java.util.UUID)
+DELETE  /api/internal/diary/cardio/:cardioEntryId/meetup                                        io.fitcentive.diary.controllers.DiaryController.dissociateCardioDiaryEntryFromMeetup(cardioEntryId: java.util.UUID)

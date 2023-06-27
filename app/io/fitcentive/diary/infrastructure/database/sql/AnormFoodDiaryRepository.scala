@@ -17,6 +17,7 @@ import scala.concurrent.Future
 import scala.util.chaining.scalaUtilChainingOps
 import io.circe.syntax._
 import io.circe.generic.auto._
+import io.fitcentive.diary.infrastructure.database.sql.AnormExerciseDiaryRepository.transformUuidsToSql
 
 @Singleton
 class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: DatabaseExecutionContext)
@@ -28,6 +29,11 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
   override def getUserRecentlyViewedFoodIds(userId: UUID): Future[Seq[Int]] =
     Future {
       getRecords(SQL_GET_USER_RECENTLY_VIEWED_FOODS, "userId" -> userId)(SqlParser.scalar[Int])
+    }
+
+  override def dissociateMeetupFromFoodEntryById(foodEntryId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DISSOCIATE_MEETUP_FROM_FOOD_ENTRY, Seq("foodEntryId" -> foodEntryId))
     }
 
   override def deleteMostRecentlyViewedFoodForUser(userId: UUID, foodId: Int): Future[Unit] =
@@ -141,7 +147,7 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
 
   override def getFoodEntriesByIds(foodDiaryEntryIds: Seq[UUID]): Future[Seq[FoodEntry]] =
     Future {
-      getRecords(SQL_GET_FOOD_ENTRIES_BY_IDS, "foodDiaryEntryIds" -> foodDiaryEntryIds)(foodEntryRowParser)
+      getRecords(SQL_GET_FOOD_ENTRIES_BY_IDS(foodDiaryEntryIds))(foodEntryRowParser)
         .map(_.toDomain)
     }
 }
@@ -190,12 +196,14 @@ object AnormFoodDiaryRepository extends AnormOps {
       |and id = {id}::uuid ;
       |""".stripMargin
 
-  private val SQL_GET_FOOD_ENTRIES_BY_IDS: String =
-    """
-      |select * 
-      |from food_entries
-      |where id in ({foodDiaryEntryIds}) ;
-      |""".stripMargin
+  private def SQL_GET_FOOD_ENTRIES_BY_IDS(ids: Seq[UUID]): String = {
+    val sql = """
+                |select *
+                |from food_entries
+                |where id in (
+                |""".stripMargin
+    transformUuidsToSql(ids, sql)
+  }
 
   private val SQL_GET_FOOD_ENTRIES_FOR_USER_BY_DATE: String =
     """
@@ -212,6 +220,13 @@ object AnormFoodDiaryRepository extends AnormOps {
       |from user_recently_viewed_foods
       |where user_id = {userId}::uuid
       |order by last_accessed desc ;
+      |""".stripMargin
+
+  private val SQL_DISSOCIATE_MEETUP_FROM_FOOD_ENTRY: String =
+    """
+      |update food_entries
+      |set meetup_id = null
+      |where id = {foodEntryId} ;
       |""".stripMargin
 
   private val SQL_DELETE_USER_RECENTLY_VIEWED_FOODS: String =

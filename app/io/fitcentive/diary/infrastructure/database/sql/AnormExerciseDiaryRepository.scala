@@ -44,6 +44,16 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
       }
     }
 
+  override def dissociateMeetupFromCardioEntryById(cardioEntryId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DISSOCIATE_MEETUP_FROM_CARDIO_ENTRY, Seq("cardioEntryId" -> cardioEntryId))
+    }
+
+  override def dissociateMeetupFromStrengthEntryById(strengthEntryId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DISSOCIATE_MEETUP_FROM_STRENGTH_ENTRY, Seq("strengthEntryId" -> strengthEntryId))
+    }
+
   override def deleteAllCardioWorkoutsForUser(userId: UUID): Future[Unit] =
     Future {
       executeSqlWithoutReturning(SQL_DELETE_ALL_CARDIO_WORKOUT_ENTRIES, Seq("userId" -> userId))
@@ -204,15 +214,13 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
 
   override def getCardioWorkoutsById(cardioDiaryEntryIds: Seq[UUID]): Future[Seq[CardioWorkout]] =
     Future {
-      getRecords(SQL_GET_CARDIO_WORKOUTS_BY_ID, "cardioDiaryEntryIds" -> cardioDiaryEntryIds)(cardioWorkoutRowParser)
+      getRecords(SQL_GET_CARDIO_WORKOUTS_BY_ID(cardioDiaryEntryIds))(cardioWorkoutRowParser)
         .map(_.toDomain)
     }
 
   override def getStrengthWorkoutsByIds(strengthDiaryEntryIds: Seq[UUID]): Future[Seq[StrengthWorkout]] =
     Future {
-      getRecords(SQL_GET_STRENGTH_WORKOUTS_BY_ID, "strengthDiaryEntryIds" -> strengthDiaryEntryIds)(
-        strengthWorkoutRowParser
-      ).map(_.toDomain)
+      getRecords(SQL_GET_STRENGTH_WORKOUTS_BY_ID(strengthDiaryEntryIds))(strengthWorkoutRowParser).map(_.toDomain)
     }
 }
 
@@ -284,6 +292,20 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |and id = {cardioWorkoutEntryId}::uuid ;
       |""".stripMargin
 
+  private val SQL_DISSOCIATE_MEETUP_FROM_CARDIO_ENTRY: String =
+    """
+      |update cardio_workouts
+      |set meetup_id = null
+      |where id = {cardioEntryId} ;
+      |""".stripMargin
+
+  private val SQL_DISSOCIATE_MEETUP_FROM_STRENGTH_ENTRY: String =
+    """
+      |update strength_workouts
+      |set meetup_id = null
+      |where id = {strengthEntryId} ;
+      |""".stripMargin
+
   private val SQL_DELETE_ALL_CARDIO_WORKOUT_ENTRIES: String =
     """
       |delete from cardio_workouts
@@ -333,19 +355,23 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |and id = {diaryEntryId}::uuid ;
       |""".stripMargin
 
-  private val SQL_GET_CARDIO_WORKOUTS_BY_ID: String =
-    """
-      |select *
-      |from cardio_workouts
-      |where id in ({cardioDiaryEntryIds}) ;
-      |""".stripMargin
+  private def SQL_GET_CARDIO_WORKOUTS_BY_ID(ids: Seq[UUID]): String = {
+    val sql = """
+                |select *
+                |from cardio_workouts
+                |where id in (
+                |""".stripMargin
+    transformUuidsToSql(ids, sql)
+  }
 
-  private val SQL_GET_STRENGTH_WORKOUTS_BY_ID: String =
-    """
+  private def SQL_GET_STRENGTH_WORKOUTS_BY_ID(ids: Seq[UUID]): String = {
+    val sql = """
       |select *
       |from strength_workouts
-      |where id in ({strengthDiaryEntryIds}) ;
+      |where id in (
       |""".stripMargin
+    transformUuidsToSql(ids, sql)
+  }
 
   private val SQL_GET_STRENGTH_WORKOUT_FOR_USER_BY_ID: String =
     """

@@ -292,4 +292,28 @@ class DiaryController @Inject() (
           .recover(resultErrorAsyncHandler)
       }
     }
+
+  def dissociateFoodDiaryEntryFromMeetup(foodEntryId: UUID): Action[AnyContent] =
+    internalAuthAction.async { implicit request =>
+      diaryApi
+        .dissociateFoodDiaryEntryFromMeetup(foodEntryId)
+        .map(_ => NoContent)
+        .recover(resultErrorAsyncHandler)
+    }
+
+  def dissociateStrengthDiaryEntryFromMeetup(strengthEntryId: UUID): Action[AnyContent] =
+    internalAuthAction.async { implicit request =>
+      diaryApi
+        .dissociateStrengthDiaryEntryFromMeetup(strengthEntryId)
+        .map(_ => NoContent)
+        .recover(resultErrorAsyncHandler)
+    }
+
+  def dissociateCardioDiaryEntryFromMeetup(cardioEntryId: UUID): Action[AnyContent] =
+    internalAuthAction.async { implicit request =>
+      diaryApi
+        .dissociateCardioDiaryEntryFromMeetup(cardioEntryId)
+        .map(_ => NoContent)
+        .recover(resultErrorAsyncHandler)
+    }
 }
