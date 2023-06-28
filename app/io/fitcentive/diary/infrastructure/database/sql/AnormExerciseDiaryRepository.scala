@@ -44,6 +44,22 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
       }
     }
 
+  override def associateMeetupWithCardioEntryById(cardioEntryId: UUID, meetupId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(
+        SQL_ASSOCIATE_MEETUP_FROM_CARDIO_ENTRY,
+        Seq("cardioEntryId" -> cardioEntryId, "meetupId" -> meetupId)
+      )
+    }
+
+  override def associateMeetupWithStrengthEntryById(strengthEntryId: UUID, meetupId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(
+        SQL_ASSOCIATE_MEETUP_FROM_STRENGTH_ENTRY,
+        Seq("strengthEntryId" -> strengthEntryId, "meetupId" -> meetupId)
+      )
+    }
+
   override def dissociateMeetupFromCardioEntryById(cardioEntryId: UUID): Future[Unit] =
     Future {
       executeSqlWithoutReturning(SQL_DISSOCIATE_MEETUP_FROM_CARDIO_ENTRY, Seq("cardioEntryId" -> cardioEntryId))
@@ -292,6 +308,13 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |and id = {cardioWorkoutEntryId}::uuid ;
       |""".stripMargin
 
+  private val SQL_ASSOCIATE_MEETUP_FROM_CARDIO_ENTRY: String =
+    """
+      |update cardio_workouts
+      |set meetup_id = {meetupId}::uuid
+      |where id = {cardioEntryId}::uuid ;
+      |""".stripMargin
+
   private val SQL_DISSOCIATE_MEETUP_FROM_CARDIO_ENTRY: String =
     """
       |update cardio_workouts
@@ -303,6 +326,13 @@ object AnormExerciseDiaryRepository extends AnormOps {
     """
       |update strength_workouts
       |set meetup_id = null
+      |where id = {strengthEntryId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_ASSOCIATE_MEETUP_FROM_STRENGTH_ENTRY: String =
+    """
+      |update strength_workouts
+      |set meetup_id = {meetupId}::uuid
       |where id = {strengthEntryId}::uuid ;
       |""".stripMargin
 

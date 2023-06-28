@@ -116,6 +116,24 @@ class DiaryApi @Inject() (
       _ <- meetupService.deleteStrengthEntryAssociatedToMeetup(strengthWorkoutEntryId)
     } yield ()
 
+  def associateDiaryEntriesToMeetup(meetupId: UUID, payload: DiaryEntryIdsPayload): Future[Unit] = {
+    for {
+      _ <- Future.unit
+      foodFut = Future.sequence(
+        payload.foodEntryIds.map(id => foodDiaryRepository.associateMeetupWithFoodEntryById(id, meetupId))
+      )
+      cardioFut = Future.sequence(
+        payload.cardioEntryIds.map(id => exerciseDiaryRepository.associateMeetupWithCardioEntryById(id, meetupId))
+      )
+      strengthFut = Future.sequence(
+        payload.strengthEntryIds.map(id => exerciseDiaryRepository.associateMeetupWithStrengthEntryById(id, meetupId))
+      )
+      _ <- foodFut
+      _ <- cardioFut
+      _ <- strengthFut
+    } yield ()
+  }
+
   def getAllDiaryEntriesForUserByDay(
     userId: UUID,
     day: Instant,

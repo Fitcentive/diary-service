@@ -44,6 +44,8 @@ trait ExerciseDiaryRepository {
   def getUserRecentlyViewedWorkoutIds(userId: UUID): Future[Seq[UUID]]
   def deleteMostRecentlyViewedWorkoutForUser(userId: UUID, workoutId: UUID): Future[Unit]
   def upsertMostRecentlyViewedWorkoutForUser(userId: UUID, workoutId: UUID): Future[Unit]
+  def associateMeetupWithCardioEntryById(cardioEntryId: UUID, meetupId: UUID): Future[Unit]
   def dissociateMeetupFromCardioEntryById(cardioEntryId: UUID): Future[Unit]
+  def associateMeetupWithStrengthEntryById(strengthEntryId: UUID, meetupId: UUID): Future[Unit]
   def dissociateMeetupFromStrengthEntryById(strengthEntryId: UUID): Future[Unit]
 }

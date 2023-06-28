@@ -135,6 +135,18 @@ class DiaryController @Inject() (
       }
     }
 
+  def associateDiaryEntriesToMeetup(implicit userId: UUID, meetupId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        validateJson[DiaryEntryIdsPayload](request.body.asJson) { payload =>
+          diaryApi
+            .associateDiaryEntriesToMeetup(meetupId, payload)
+            .map(_ => NoContent)
+            .recover(resultErrorAsyncHandler)
+        }
+      }(request, userId)
+    }
+
   def getAllCardioWorkoutsForUserByDay(implicit
     userId: UUID,
     dateString: String,

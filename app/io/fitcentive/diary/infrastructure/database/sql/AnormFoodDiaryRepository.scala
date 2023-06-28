@@ -17,7 +17,10 @@ import scala.concurrent.Future
 import scala.util.chaining.scalaUtilChainingOps
 import io.circe.syntax._
 import io.circe.generic.auto._
-import io.fitcentive.diary.infrastructure.database.sql.AnormExerciseDiaryRepository.transformUuidsToSql
+import io.fitcentive.diary.infrastructure.database.sql.AnormExerciseDiaryRepository.{
+  transformUuidsToSql,
+  SQL_ASSOCIATE_MEETUP_FROM_STRENGTH_ENTRY
+}
 
 @Singleton
 class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: DatabaseExecutionContext)
@@ -29,6 +32,14 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
   override def getUserRecentlyViewedFoodIds(userId: UUID): Future[Seq[Int]] =
     Future {
       getRecords(SQL_GET_USER_RECENTLY_VIEWED_FOODS, "userId" -> userId)(SqlParser.scalar[Int])
+    }
+
+  override def associateMeetupWithFoodEntryById(foodEntryId: UUID, meetupId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(
+        SQL_ASSOCIATE_MEETUP_FROM_FOOD_ENTRY,
+        Seq("foodEntryId" -> foodEntryId, "meetupId" -> meetupId)
+      )
     }
 
   override def dissociateMeetupFromFoodEntryById(foodEntryId: UUID): Future[Unit] =
@@ -220,6 +231,13 @@ object AnormFoodDiaryRepository extends AnormOps {
       |from user_recently_viewed_foods
       |where user_id = {userId}::uuid
       |order by last_accessed desc ;
+      |""".stripMargin
+
+  private val SQL_ASSOCIATE_MEETUP_FROM_FOOD_ENTRY: String =
+    """
+      |update food_entries
+      |set meetup_id = {meetupId}::uuid
+      |where id = {foodEntryId}::uuid ;
       |""".stripMargin
 
   private val SQL_DISSOCIATE_MEETUP_FROM_FOOD_ENTRY: String =
