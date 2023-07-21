@@ -88,3 +88,7 @@ Note - these pre-requisites need only be done **once ever**. If you are deployin
 3. Ensure you are on the right `kubectl` context
 4. `cd deployment`
 5. `kubectl apply -f gke-dev-env`
+
+== Deploy cron image
+1. `docker build -t gcr.io/fitcentive-dev-03/gcloud-diary-cron-pubsub-image:latest -t gcr.io/fitcentive-dev-03/gcloud-diary-cron-pubsub-image:1.0 .`
+2. `docker push gcr.io/fitcentive-dev-03/gcloud-diary-cron-pubsub-image:1.0`
