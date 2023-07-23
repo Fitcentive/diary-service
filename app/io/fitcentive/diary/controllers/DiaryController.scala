@@ -135,6 +135,20 @@ class DiaryController @Inject() (
       }
     }
 
+  def getAllDiaryEntriesForUserByMonth(implicit
+    userId: UUID,
+    dateString: String,
+    offsetInMinutes: Int,
+  ): Action[AnyContent] =
+    userAuthAction.async { implicit request =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getAllDiaryEntriesForUserByMonth(userId, dateString, offsetInMinutes)
+          .map(entries => Ok(Json.toJson(entries)))
+          .recover(resultErrorAsyncHandler)
+      }
+    }
+
   def associateDiaryEntriesToMeetup(implicit userId: UUID, meetupId: UUID): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {

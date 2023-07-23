@@ -1,7 +1,7 @@
 package io.fitcentive.diary.api
 
 import cats.data.EitherT
-import io.fitcentive.diary.domain.diary.AllDiaryEntriesForDay
+import io.fitcentive.diary.domain.diary.{AllDiaryEntriesForDay, AllDiaryEntriesForMonth}
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.domain.payloads.DiaryEntryIdsPayload
@@ -9,11 +9,15 @@ import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepos
 import io.fitcentive.diary.services.MeetupService
 import io.fitcentive.sdk.error.{DomainError, EntityNotAccessible, EntityNotFoundError}
 
-import java.time.Instant
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
+import java.time.format.{DateTimeFormatter, FormatStyle}
 import java.time.temporal.ChronoUnit
-import java.util.UUID
+import java.util.{Date, UUID}
 import javax.inject.{Inject, Singleton}
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.scalaUtilChainingOps
 
 @Singleton
 class DiaryApi @Inject() (
@@ -151,6 +155,55 @@ class DiaryApi @Inject() (
       strengthWorkouts = strengthEntries,
       foodEntries = foodEntries
     )
+  }
+
+  def getAllDiaryEntriesForUserByMonth(
+    userId: UUID,
+    dateString: String,
+    offsetInMinutes: Int
+  ): Future[AllDiaryEntriesForMonth] = {
+    val startOfMonth = LocalDate.parse(dateString).atStartOfDay().toInstant(ZoneOffset.UTC)
+    var windowStart = startOfMonth.plus(-offsetInMinutes, ChronoUnit.MINUTES)
+
+    val date = LocalDate.parse(dateString)
+    val windowMaxEnd = {
+      if (List(4, 6, 9, 11).contains(date.getMonth.getValue)) windowStart.plus(30, ChronoUnit.DAYS)
+      else if (List(1, 3, 5, 7, 8, 10, 12).contains(date.getMonth.getValue)) windowStart.plus(31, ChronoUnit.DAYS)
+      else {
+        if (date.getYear % 4 == 0) windowStart.plus(29, ChronoUnit.DAYS)
+        else windowStart.plus(28, ChronoUnit.DAYS)
+      }
+    }
+
+    val keys: mutable.ArrayBuffer[Instant] = mutable.ArrayBuffer.empty
+    while (windowStart.isBefore(windowMaxEnd)) {
+      keys.addOne(windowStart)
+      windowStart = windowStart.plus(1, ChronoUnit.DAYS)
+    }
+
+    Future
+      .sequence(keys.toSeq.map { dayOfMonth =>
+        val windowEnd = dayOfMonth.plus(1, ChronoUnit.DAYS)
+        for {
+          cardioEntries <-
+            exerciseDiaryRepository.getAllCardioWorkoutsForDayByUser(userId = userId, dayOfMonth, windowEnd)
+          strengthEntries <-
+            exerciseDiaryRepository.getAllStrengthWorkoutsForDayByUser(userId = userId, dayOfMonth, windowEnd)
+          foodEntries <- foodDiaryRepository.getAllFoodEntriesForDayByUser(userId, dayOfMonth, windowEnd)
+        } yield AllDiaryEntriesForDay(
+          cardioWorkouts = cardioEntries,
+          strengthWorkouts = strengthEntries,
+          foodEntries = foodEntries
+        ).pipe { allEntries =>
+          DateTimeFormatter
+            .ofPattern("yyyy-MM-dd")
+            .format(LocalDateTime.ofInstant(dayOfMonth, ZoneOffset.UTC)) -> allEntries
+        }
+      })
+      .map { entries =>
+        AllDiaryEntriesForMonth(entries = Map.from(entries))
+      }
+
   }
 
   def getDiaryEntriesByIds(diaryEntriesPayload: DiaryEntryIdsPayload): Future[AllDiaryEntriesForDay] = {

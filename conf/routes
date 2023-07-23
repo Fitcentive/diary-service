@@ -12,6 +12,7 @@ GET      /api/diary/exercise/:workoutId                                         
 
 # Get all diary entry endpoint
 GET      /api/diary/user/:userId/date/:dateString                                               io.fitcentive.diary.controllers.DiaryController.getAllDiaryEntriesForUserByDay(userId: java.util.UUID, dateString: String, offsetInMinutes: Int)
+GET      /api/diary/user/:userId/month/:dateString                                              io.fitcentive.diary.controllers.DiaryController.getAllDiaryEntriesForUserByMonth(userId: java.util.UUID, dateString: String, offsetInMinutes: Int)
 
 # Associate diary entries in payload to meetupId for userId
 POST      /api/diary/user/:userId/meetup/:meetupId                                              io.fitcentive.diary.controllers.DiaryController.associateDiaryEntriesToMeetup(userId: java.util.UUID, meetupId: java.util.UUID)
