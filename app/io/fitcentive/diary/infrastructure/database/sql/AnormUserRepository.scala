@@ -48,6 +48,7 @@ class AnormUserRepository @Inject() (val db: Database)(implicit val dbec: Databa
             "activityLevel" -> UserFitnessActivityLevel(fitnessUserProfileUpdate.activityLevel).stringValue,
             "goal" -> UserFitnessGoal(fitnessUserProfileUpdate.goal).stringValue,
             "stepGoalPerDay" -> fitnessUserProfileUpdate.stepGoalPerDay,
+            "goalWeightInLbs" -> fitnessUserProfileUpdate.goalWeightInLbs,
           )
         )(fitnessUserProfileRowParser).toDomain
       }
@@ -64,8 +65,8 @@ object AnormUserRepository extends AnormOps {
 
   private val SQL_UPSERT_FITNESS_USER_PROFILE_AND_RETURN: String =
     """
-      |insert into fitness_user_profile (user_id, height_in_cm, weight_in_lbs, created_at, updated_at, activity_level, goal, step_goal_per_day)
-      |values ({userId}::uuid, {heightInCm}, {weightInLbs}, {now}, {now}, {activityLevel}, {goal}, {stepGoalPerDay})
+      |insert into fitness_user_profile (user_id, height_in_cm, weight_in_lbs, created_at, updated_at, activity_level, goal, step_goal_per_day, goal_weight_in_lbs)
+      |values ({userId}::uuid, {heightInCm}, {weightInLbs}, {now}, {now}, {activityLevel}, {goal}, {stepGoalPerDay}, {goalWeightInLbs})
       |on conflict (user_id)
       |do update set
       |  weight_in_lbs = {weightInLbs},
@@ -73,6 +74,7 @@ object AnormUserRepository extends AnormOps {
       |  activity_level = {activityLevel},
       |  goal = {goal},
       |  step_goal_per_day = {stepGoalPerDay},
+      |  goal_weight_in_lbs = {goalWeightInLbs},
       |  updated_at = {now}
       |returning *;
       |""".stripMargin
@@ -91,6 +93,7 @@ object AnormUserRepository extends AnormOps {
     activity_level: String,
     goal: String,
     step_goal_per_day: Option[Int],
+    goal_weight_in_lbs: Option[Double],
     created_at: Instant,
     updated_at: Instant
   ) {
@@ -99,6 +102,7 @@ object AnormUserRepository extends AnormOps {
         userId = user_id,
         heightInCm = height_in_cm,
         weightInLbs = weight_in_lbs,
+        goalWeightInLbs = goal_weight_in_lbs,
         activityLevel = UserFitnessActivityLevel(activity_level),
         goal = UserFitnessGoal(goal),
         stepGoalPerDay = step_goal_per_day,

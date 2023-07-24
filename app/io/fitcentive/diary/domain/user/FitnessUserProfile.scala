@@ -11,6 +11,7 @@ case class FitnessUserProfile(
   weightInLbs: Double,
   activityLevel: UserFitnessActivityLevel,
   goal: UserFitnessGoal,
+  goalWeightInLbs: Option[Double],
   stepGoalPerDay: Option[Int],
   createdAt: Instant,
   updatedAt: Instant
@@ -24,6 +25,7 @@ object FitnessUserProfile {
     weightInLbs: Double,
     activityLevel: String,
     goal: String,
+    goalWeightInLbs: Option[Double],
     stepGoalPerDay: Option[Int]
   )
 

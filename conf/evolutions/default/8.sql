@@ -41,6 +41,7 @@ create table steps_taken (
 alter table fitness_user_profile
     add column activity_level varchar not null default 'Lightly active' constraint fk_activity_levels references activity_levels (name),
     add column goal varchar not null default 'Maintain weight' constraint fk_goals references goals (name),
+    add column goal_weight_in_lbs decimal,
     add column step_goal_per_day int;
 
 
