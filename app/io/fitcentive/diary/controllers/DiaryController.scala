@@ -3,7 +3,7 @@ package io.fitcentive.diary.controllers
 import io.fitcentive.diary.api.DiaryApi
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
 import io.fitcentive.diary.domain.food.FoodEntry
-import io.fitcentive.diary.domain.payloads.{DiaryEntryIdsPayload, IntPayload, UUIDPayload}
+import io.fitcentive.diary.domain.payloads.{DiaryEntryIdsPayload, IntPayload, StepsPayload, UUIDPayload}
 import io.fitcentive.diary.infrastructure.utils.ServerErrorHandler
 import io.fitcentive.sdk.play.{InternalAuthAction, UserAuthAction}
 import io.fitcentive.sdk.utils.PlayControllerOps
@@ -303,6 +303,31 @@ class DiaryController @Inject() (
             .map(_ => NoContent)
             .recover(resultErrorAsyncHandler)
         }
+      }
+    }
+
+  //----------------------------------
+  // Steps routes
+  //----------------------------------
+  def upsertUserStepsData(implicit userId: UUID): Action[AnyContent] =
+    userAuthAction.async { implicit userRequest =>
+      rejectIfNotEntitled {
+        validateJson[StepsPayload](userRequest.body.asJson) { payload =>
+          diaryApi
+            .upsertUserStepsData(userId, payload.stepsTaken, payload.dateString)
+            .map(handleEitherResult(_)(data => Ok(Json.toJson(data))))
+            .recover(resultErrorAsyncHandler)
+        }
+      }
+    }
+
+  def getUserStepsData(implicit userId: UUID, dateString: String): Action[AnyContent] =
+    userAuthAction.async { implicit userRequest =>
+      rejectIfNotEntitled {
+        diaryApi
+          .getUserStepsData(userId, dateString)
+          .map(handleEitherResult(_)(data => Ok(Json.toJson(data))))
+          .recover(resultErrorAsyncHandler)
       }
     }
 

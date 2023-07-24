@@ -56,6 +56,10 @@ GET      /api/diary/food/search/autocomplete                                    
 GET      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.getUserFitnessProfile(userId: java.util.UUID)
 PUT      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.upsertUserFitnessProfile(userId: java.util.UUID)
 
+# User steps data
+GET      /api/diary/user/:userId/steps                                                          io.fitcentive.diary.controllers.DiaryController.getUserStepsData(userId: java.util.UUID, dateString: String)
+PUT      /api/diary/user/:userId/steps                                                          io.fitcentive.diary.controllers.DiaryController.upsertUserStepsData(userId: java.util.UUID)
+
 
 # Internal endpoints
 DELETE  /api/internal/diary/user/:userId                                                        io.fitcentive.diary.controllers.UserController.deleteUserDiaryData(userId: java.util.UUID)

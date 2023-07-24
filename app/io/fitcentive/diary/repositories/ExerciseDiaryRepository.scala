@@ -2,7 +2,7 @@ package io.fitcentive.diary.repositories
 
 import com.google.inject.ImplementedBy
 import io.fitcentive.diary.domain.exercise
-import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
+import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout, UserStepsData}
 import io.fitcentive.diary.infrastructure.database.sql.AnormExerciseDiaryRepository
 
 import java.time.Instant
@@ -48,4 +48,12 @@ trait ExerciseDiaryRepository {
   def dissociateMeetupFromCardioEntryById(cardioEntryId: UUID): Future[Unit]
   def associateMeetupWithStrengthEntryById(strengthEntryId: UUID, meetupId: UUID): Future[Unit]
   def dissociateMeetupFromStrengthEntryById(strengthEntryId: UUID): Future[Unit]
+  def upsertUserStepsData(
+    userId: UUID,
+    stepsTaken: Int,
+    caloriesBurned: Double,
+    entryDate: String
+  ): Future[UserStepsData]
+  def getUserStepsData(userId: UUID, dateString: String): Future[Option[UserStepsData]]
+  def deleteAllUserStepsData(userId: UUID): Future[Unit]
 }

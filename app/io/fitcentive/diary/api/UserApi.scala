@@ -34,5 +34,6 @@ class UserApi @Inject() (
       _ <- exerciseDiaryRepository.deleteAllCardioWorkoutsForUser(userId)
       _ <- exerciseDiaryRepository.deleteAllStrengthWorkoutsForUser(userId)
       _ <- foodDiaryRepository.deleteAllFoodEntriesForUser(userId)
+      _ <- exerciseDiaryRepository.deleteAllUserStepsData(userId)
     } yield ()
 }

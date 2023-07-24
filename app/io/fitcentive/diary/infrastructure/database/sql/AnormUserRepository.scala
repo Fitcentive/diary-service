@@ -1,7 +1,7 @@
 package io.fitcentive.diary.infrastructure.database.sql
 
 import anorm.{Macro, RowParser}
-import io.fitcentive.diary.domain.user.FitnessUserProfile
+import io.fitcentive.diary.domain.user.{FitnessUserProfile, UserFitnessActivityLevel, UserFitnessGoal}
 import io.fitcentive.sdk.infrastructure.contexts.DatabaseExecutionContext
 import io.fitcentive.sdk.infrastructure.database.DatabaseClient
 import io.fitcentive.sdk.utils.AnormOps
@@ -45,6 +45,9 @@ class AnormUserRepository @Inject() (val db: Database)(implicit val dbec: Databa
             "heightInCm" -> fitnessUserProfileUpdate.heightInCm,
             "weightInLbs" -> fitnessUserProfileUpdate.weightInLbs,
             "now" -> now,
+            "activityLevel" -> UserFitnessActivityLevel(fitnessUserProfileUpdate.activityLevel).stringValue,
+            "goal" -> UserFitnessGoal(fitnessUserProfileUpdate.goal).stringValue,
+            "stepGoalPerDay" -> fitnessUserProfileUpdate.stepGoalPerDay,
           )
         )(fitnessUserProfileRowParser).toDomain
       }
@@ -61,12 +64,15 @@ object AnormUserRepository extends AnormOps {
 
   private val SQL_UPSERT_FITNESS_USER_PROFILE_AND_RETURN: String =
     """
-      |insert into fitness_user_profile (user_id, height_in_cm, weight_in_lbs, created_at, updated_at)
-      |values ({userId}::uuid, {heightInCm}, {weightInLbs}, {now}, {now})
+      |insert into fitness_user_profile (user_id, height_in_cm, weight_in_lbs, created_at, updated_at, activity_level, goal, step_goal_per_day)
+      |values ({userId}::uuid, {heightInCm}, {weightInLbs}, {now}, {now}, {activityLevel}, {goal}, {stepGoalPerDay})
       |on conflict (user_id)
       |do update set
       |  weight_in_lbs = {weightInLbs},
       |  height_in_cm = {heightInCm},
+      |  activity_level = {activityLevel},
+      |  goal = {goal},
+      |  step_goal_per_day = {stepGoalPerDay},
       |  updated_at = {now}
       |returning *;
       |""".stripMargin
@@ -82,6 +88,9 @@ object AnormUserRepository extends AnormOps {
     user_id: UUID,
     height_in_cm: Double,
     weight_in_lbs: Double,
+    activity_level: String,
+    goal: String,
+    step_goal_per_day: Option[Int],
     created_at: Instant,
     updated_at: Instant
   ) {
@@ -90,6 +99,9 @@ object AnormUserRepository extends AnormOps {
         userId = user_id,
         heightInCm = height_in_cm,
         weightInLbs = weight_in_lbs,
+        activityLevel = UserFitnessActivityLevel(activity_level),
+        goal = UserFitnessGoal(goal),
+        stepGoalPerDay = step_goal_per_day,
         createdAt = created_at,
         updatedAt = updated_at
       )

@@ -2,20 +2,21 @@ package io.fitcentive.diary.api
 
 import cats.data.EitherT
 import io.fitcentive.diary.domain.diary.{AllDiaryEntriesForDay, AllDiaryEntriesForMonth}
-import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
+import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout, UserStepsData}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.domain.payloads.DiaryEntryIdsPayload
-import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository}
+import io.fitcentive.diary.domain.user.{FitnessUserProfile, UserFitnessGoal}
+import io.fitcentive.diary.infrastructure.utils.CalorieCalculationUtils
+import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository, UserRepository}
 import io.fitcentive.diary.services.MeetupService
 import io.fitcentive.sdk.error.{DomainError, EntityNotAccessible, EntityNotFoundError}
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
-import java.time.format.{DateTimeFormatter, FormatStyle}
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.{Date, UUID}
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -23,8 +24,10 @@ import scala.util.chaining.scalaUtilChainingOps
 class DiaryApi @Inject() (
   exerciseDiaryRepository: ExerciseDiaryRepository,
   foodDiaryRepository: FoodDiaryRepository,
+  userRepository: UserRepository,
   meetupService: MeetupService
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext)
+  extends CalorieCalculationUtils {
 
   // --------------------------------
   // Exercise Diary API methods
@@ -353,5 +356,32 @@ class DiaryApi @Inject() (
 
   def dissociateStrengthDiaryEntryFromMeetup(strengthEntryId: UUID): Future[Unit] =
     exerciseDiaryRepository.dissociateMeetupFromStrengthEntryById(strengthEntryId)
+
+  def upsertUserStepsData(
+    userId: UUID,
+    stepsTaken: Int,
+    dateString: String
+  ): Future[Either[DomainError, UserStepsData]] =
+    (for {
+      userFitnessProfile <- EitherT[Future, DomainError, FitnessUserProfile](
+        userRepository
+          .getFitnessUserProfile(userId)
+          .map(_.map(Right.apply).getOrElse(Left(EntityNotFoundError("No user fitness profile found!"))))
+      )
+      stepsData <- EitherT.right[DomainError](
+        exerciseDiaryRepository
+          .upsertUserStepsData(
+            userId,
+            stepsTaken,
+            caloriesBurnedForStepsTaken(stepsTaken, userFitnessProfile),
+            dateString
+          )
+      )
+    } yield stepsData).value
+
+  def getUserStepsData(userId: UUID, dateString: String): Future[Either[DomainError, UserStepsData]] =
+    exerciseDiaryRepository
+      .getUserStepsData(userId, dateString)
+      .map(_.map(Right.apply).getOrElse(Left(EntityNotFoundError("No steps data found!"))))
 
 }

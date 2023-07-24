@@ -9,6 +9,9 @@ case class FitnessUserProfile(
   userId: UUID,
   heightInCm: Double,
   weightInLbs: Double,
+  activityLevel: UserFitnessActivityLevel,
+  goal: UserFitnessGoal,
+  stepGoalPerDay: Option[Int],
   createdAt: Instant,
   updatedAt: Instant
 )
@@ -16,7 +19,13 @@ case class FitnessUserProfile(
 object FitnessUserProfile {
   implicit lazy val writes: Writes[FitnessUserProfile] = Json.writes[FitnessUserProfile]
 
-  case class Update(heightInCm: Double, weightInLbs: Double)
+  case class Update(
+    heightInCm: Double,
+    weightInLbs: Double,
+    activityLevel: String,
+    goal: String,
+    stepGoalPerDay: Option[Int]
+  )
 
   object Update {
     implicit lazy val reads: Reads[FitnessUserProfile.Update] = Json.reads[FitnessUserProfile.Update]

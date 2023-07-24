@@ -1,7 +1,7 @@
 package io.fitcentive.diary.infrastructure.database.sql
 
 import anorm.{Macro, RowParser, SqlParser}
-import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout}
+import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout, UserStepsData}
 import io.fitcentive.sdk.infrastructure.contexts.DatabaseExecutionContext
 import io.fitcentive.sdk.infrastructure.database.DatabaseClient
 import io.fitcentive.sdk.utils.AnormOps
@@ -238,6 +238,38 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
     Future {
       getRecords(SQL_GET_STRENGTH_WORKOUTS_BY_ID(strengthDiaryEntryIds))(strengthWorkoutRowParser).map(_.toDomain)
     }
+
+  override def upsertUserStepsData(
+    userId: UUID,
+    stepsTaken: Int,
+    caloriesBurned: Double,
+    entryDate: String
+  ): Future[UserStepsData] =
+    Future {
+      Instant.now.pipe { now =>
+        executeSqlWithExpectedReturn(
+          SQL_UPSERT_AND_RETURN_STEPS,
+          Seq(
+            "id" -> UUID.randomUUID(),
+            "userId" -> userId,
+            "steps" -> stepsTaken,
+            "caloriesBurned" -> caloriesBurned,
+            "entryDate" -> entryDate,
+            "now" -> now
+          )
+        )(stepsRowParser).toDomain
+      }
+    }
+
+  override def getUserStepsData(userId: UUID, dateString: String): Future[Option[UserStepsData]] =
+    Future {
+      getRecordOpt(SQL_GET_USER_STEPS, "userId" -> userId, "dateString" -> dateString)(stepsRowParser).map(_.toDomain)
+    }
+
+  override def deleteAllUserStepsData(userId: UUID): Future[Unit] =
+    Future {
+      executeSqlWithoutReturning(SQL_DELETE_ALL_USER_STEP_DATA, Seq("userId" -> userId))
+    }
 }
 
 object AnormExerciseDiaryRepository extends AnormOps {
@@ -283,6 +315,32 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |where user_id = {userId}::uuid
       |and exercise_date >= {windowStart}
       |and exercise_date <= {windowEnd} ;
+      |""".stripMargin
+
+  private val SQL_DELETE_ALL_USER_STEP_DATA: String =
+    """
+      |delete from steps_taken
+      |where user_id = {userId}::uuid ;
+      |""".stripMargin
+
+  private val SQL_UPSERT_AND_RETURN_STEPS: String =
+    """
+      |insert into steps_taken (id, user_id, steps, calories_burned, entry_date, created_at, updated_at)
+      |values ({id}::uuid, {userId}::uuid, {steps}, {caloriesBurned}, {entryDate}, {now}, {now})
+      |on conflict (user_id, entry_date)
+      |do update set
+      | steps = {steps},
+      | calories_burned = {caloriesBurned},
+      | updated_at = {now}
+      |returning * ;
+      |""".stripMargin
+
+  private val SQL_GET_USER_STEPS: String =
+    """
+      |select *
+      |from steps_taken
+      |where user_id = {userId}::uuid
+      |and entry_date = {dateString} ;
       |""".stripMargin
 
   private val SQL_INSERT_AND_RETURN_CARDIO_WORKOUT: String =
@@ -485,6 +543,28 @@ object AnormExerciseDiaryRepository extends AnormOps {
       )
   }
 
+  private case class StepsRow(
+    id: UUID,
+    user_id: UUID,
+    steps: Int,
+    calories_burned: Double,
+    entry_date: String,
+    created_at: Instant,
+    updated_at: Instant,
+  ) {
+    def toDomain: UserStepsData =
+      UserStepsData(
+        id = id,
+        userId = user_id,
+        steps = steps,
+        caloriesBurned = calories_burned,
+        entryDate = entry_date,
+        createdAt = created_at,
+        updatedAt = updated_at,
+      )
+  }
+
   private val cardioWorkoutRowParser: RowParser[CardioWorkoutRow] = Macro.namedParser[CardioWorkoutRow]
   private val strengthWorkoutRowParser: RowParser[StrengthWorkoutRow] = Macro.namedParser[StrengthWorkoutRow]
+  private val stepsRowParser: RowParser[StepsRow] = Macro.namedParser[StepsRow]
 }
