@@ -114,6 +114,8 @@ spec:
               value: "warm-wger-api-cache"
             - name: SUBSCRIPTION_WARM_WGER_API_CACHE
               value: "warm-wger-api-cache"
+            - name: TOPIC_USER_STEP_DATA_UPDATED
+              value: "user-step-data-updated"
       volumes:
         - name: cloudsql-creds
           secret:

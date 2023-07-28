@@ -5,10 +5,10 @@ import io.fitcentive.diary.domain.diary.{AllDiaryEntriesForDay, AllDiaryEntriesF
 import io.fitcentive.diary.domain.exercise.{CardioWorkout, StrengthWorkout, UserStepsData}
 import io.fitcentive.diary.domain.food.FoodEntry
 import io.fitcentive.diary.domain.payloads.DiaryEntryIdsPayload
-import io.fitcentive.diary.domain.user.{FitnessUserProfile, UserFitnessGoal}
+import io.fitcentive.diary.domain.user.FitnessUserProfile
 import io.fitcentive.diary.infrastructure.utils.CalorieCalculationUtils
 import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository, UserRepository}
-import io.fitcentive.diary.services.MeetupService
+import io.fitcentive.diary.services.{MeetupService, MessageBusService}
 import io.fitcentive.sdk.error.{DomainError, EntityNotAccessible, EntityNotFoundError}
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
@@ -25,7 +25,8 @@ class DiaryApi @Inject() (
   exerciseDiaryRepository: ExerciseDiaryRepository,
   foodDiaryRepository: FoodDiaryRepository,
   userRepository: UserRepository,
-  meetupService: MeetupService
+  meetupService: MeetupService,
+  messageBusService: MessageBusService,
 )(implicit ec: ExecutionContext)
   extends CalorieCalculationUtils {
 
@@ -377,6 +378,7 @@ class DiaryApi @Inject() (
             dateString
           )
       )
+      _ <- EitherT.right[DomainError](messageBusService.publishUserStepDataUpdatedEvent(stepsData))
     } yield stepsData).value
 
   def getUserStepsData(userId: UUID, dateString: String): Future[Either[DomainError, UserStepsData]] =
