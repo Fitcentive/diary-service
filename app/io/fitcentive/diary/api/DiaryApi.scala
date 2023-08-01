@@ -34,8 +34,13 @@ class DiaryApi @Inject() (
   // Exercise Diary API methods
   // --------------------------------
   def insertCardioDiaryEntry(userId: UUID, create: CardioWorkout.Create): Future[CardioWorkout] =
-    exerciseDiaryRepository
-      .insertCardioWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
+    for {
+      c <-
+        exerciseDiaryRepository
+          .insertCardioWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
+      entryDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(c.createdAt)
+      _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, c.durationInMinutes)
+    } yield c
 
   def updateStrengthDiaryEntry(
     userId: UUID,
@@ -115,8 +120,14 @@ class DiaryApi @Inject() (
     } yield ()
 
   def insertStrengthDiaryEntry(userId: UUID, create: StrengthWorkout.Create): Future[StrengthWorkout] =
-    exerciseDiaryRepository
-      .insertStrengthWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
+    for {
+      s <-
+        exerciseDiaryRepository
+          .insertStrengthWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
+      activityMinutes = calculateActivityMinutes(s.sets.getOrElse(0), s.reps.getOrElse(0))
+      entryDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(s.createdAt)
+      _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, Some(activityMinutes))
+    } yield s
 
   def deleteStrengthDiaryEntry(userId: UUID, strengthWorkoutEntryId: UUID): Future[Unit] =
     for {
@@ -315,8 +326,13 @@ class DiaryApi @Inject() (
     } yield entry).value
 
   def insertFoodDiaryEntry(userId: UUID, create: FoodEntry.Create): Future[FoodEntry] =
-    foodDiaryRepository
-      .insertFoodDiaryEntry(id = UUID.randomUUID(), userId = userId, create = create)
+    for {
+      f <-
+        foodDiaryRepository
+          .insertFoodDiaryEntry(id = UUID.randomUUID(), userId = userId, create = create)
+      entryDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(f.createdAt)
+      _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, None)
+    } yield f
 
   def deleteFoodDiaryEntry(userId: UUID, foodEntryId: UUID): Future[Unit] =
     for {
@@ -386,4 +402,11 @@ class DiaryApi @Inject() (
       .getUserStepsData(userId, dateString)
       .map(_.map(Right.apply).getOrElse(Left(EntityNotFoundError("No steps data found!"))))
 
+  /**
+    * Same formula to be used in client side app
+    */
+  private def calculateActivityMinutes(sets: Int, reps: Int): Int = {
+    if (sets == 0 || reps == 0) 0
+    else (((reps * 4) * sets) + (scala.math.max(sets - 1, 1) * 30)) / 60
+  }
 }

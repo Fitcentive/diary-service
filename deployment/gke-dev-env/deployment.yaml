@@ -116,6 +116,8 @@ spec:
               value: "warm-wger-api-cache"
             - name: TOPIC_USER_STEP_DATA_UPDATED
               value: "user-step-data-updated"
+            - name: TOPIC_USER_DIARY_ENTRY_CREATED
+              value: "user-diary-entry-created"
       volumes:
         - name: cloudsql-creds
           secret:
