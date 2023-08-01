@@ -38,7 +38,7 @@ class DiaryApi @Inject() (
       c <-
         exerciseDiaryRepository
           .insertCardioWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
-      entryDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(c.createdAt)
+      entryDate = LocalDateTime.ofInstant(c.createdAt, ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, c.durationInMinutes)
     } yield c
 
@@ -125,7 +125,7 @@ class DiaryApi @Inject() (
         exerciseDiaryRepository
           .insertStrengthWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
       activityMinutes = calculateActivityMinutes(s.sets.getOrElse(0), s.reps.getOrElse(0))
-      entryDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(s.createdAt)
+      entryDate = LocalDateTime.ofInstant(s.createdAt, ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, Some(activityMinutes))
     } yield s
 
@@ -330,7 +330,7 @@ class DiaryApi @Inject() (
       f <-
         foodDiaryRepository
           .insertFoodDiaryEntry(id = UUID.randomUUID(), userId = userId, create = create)
-      entryDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(f.createdAt)
+      entryDate = LocalDateTime.ofInstant(f.createdAt, ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, None)
     } yield f
 
