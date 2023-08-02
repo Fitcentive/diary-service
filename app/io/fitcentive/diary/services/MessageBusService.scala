@@ -11,4 +11,5 @@ import scala.concurrent.Future
 trait MessageBusService {
   def publishUserStepDataUpdatedEvent(stepsData: UserStepsData): Future[Unit]
   def publishUserDiaryEntryCreatedEvent(userId: UUID, entryDate: String, activityMinutes: Option[Int]): Future[Unit]
+  def publishUserWeightUpdatedEvent(userId: UUID, entryDate: String, newWeightInLbs: Double): Future[Unit]
 }

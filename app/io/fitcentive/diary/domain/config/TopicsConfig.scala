@@ -6,11 +6,12 @@ import io.fitcentive.sdk.config.PubSubTopicConfig
 case class TopicsConfig(
   warmWgerApiCacheTopic: String,
   userStepDataUpdatedTopic: String,
-  userDiaryEntryCreatedTopic: String
+  userDiaryEntryCreatedTopic: String,
+  userWeightUpdatedTopic: String,
 ) extends PubSubTopicConfig {
 
   val topics: Seq[String] =
-    Seq(warmWgerApiCacheTopic, userStepDataUpdatedTopic, userDiaryEntryCreatedTopic)
+    Seq(warmWgerApiCacheTopic, userStepDataUpdatedTopic, userDiaryEntryCreatedTopic, userWeightUpdatedTopic)
 
 }
 
@@ -20,5 +21,6 @@ object TopicsConfig {
       config.getString("warm-wger-api-cache"),
       config.getString("user-step-data-updated"),
       config.getString("user-diary-entry-created"),
+      config.getString("user-weight-updated"),
     )
 }

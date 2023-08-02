@@ -5,6 +5,7 @@ import io.fitcentive.diary.domain.exercise.UserStepsData
 import io.fitcentive.diary.infrastructure.contexts.PubSubExecutionContext
 import io.fitcentive.diary.services.{MessageBusService, SettingsService}
 import io.fitcentive.registry.events.diary.UserDiaryEntryCreated
+import io.fitcentive.registry.events.diary.UserWeightUpdated
 import io.fitcentive.registry.events.steps.UserStepDataUpdated
 import io.fitcentive.sdk.gcp.pubsub.PubSubPublisher
 
@@ -19,6 +20,10 @@ class EventPublisherService @Inject() (publisher: PubSubPublisher, settingsServi
 ) extends MessageBusService {
 
   private val publisherConfig: TopicsConfig = settingsService.pubSubConfig.topicsConfig
+
+  override def publishUserWeightUpdatedEvent(userId: UUID, entryDate: String, newWeightInLbs: Double): Future[Unit] =
+    UserWeightUpdated(userId = userId, date = entryDate, newWeightInLbs = newWeightInLbs)
+      .pipe(publisher.publish(publisherConfig.userWeightUpdatedTopic, _))
 
   override def publishUserStepDataUpdatedEvent(stepsData: UserStepsData): Future[Unit] =
     stepsData.toOut

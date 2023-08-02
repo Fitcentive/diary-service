@@ -42,7 +42,7 @@ class UserController @Inject() (
         validateJson[FitnessUserProfile.Update](userRequest.request.body.asJson) { userProfileUpdate =>
           userApi
             .upsertUserFitnessProfile(userId, userProfileUpdate)
-            .map(handleEitherResult(_)(userProfile => Ok(Json.toJson(userProfile))))
+            .map(userProfile => Ok(Json.toJson(userProfile)))
             .recover(resultErrorAsyncHandler)
         }
       }
