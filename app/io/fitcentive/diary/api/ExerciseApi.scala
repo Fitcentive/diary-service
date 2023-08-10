@@ -3,14 +3,21 @@ package io.fitcentive.diary.api
 import cats.data.EitherT
 import io.fitcentive.sdk.error.{DomainError, EntityNotFoundError}
 import io.fitcentive.diary.domain.wger.ExerciseDefinition
+import io.fitcentive.diary.repositories.UserRepository
 import io.fitcentive.diary.services._
 
+import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ExerciseApi @Inject() (exerciseService: ExerciseService)(implicit ec: ExecutionContext) {
+class ExerciseApi @Inject() (
+  exerciseService: ExerciseService,
+  userRepository: UserRepository,
+  messageBusService: MessageBusService,
+)(implicit ec: ExecutionContext) {
 
   val ENGLISH = 2
 
@@ -29,6 +36,30 @@ class ExerciseApi @Inject() (exerciseService: ExerciseService)(implicit ec: Exec
           )
       }
     } yield exerciseDefinition).value
+
+  // Wrap in future to ACK pubsub message immediately
+  def checkIfUsersNeedPromptToLogWeightEvent(userIds: Seq[UUID]): Future[Unit] =
+    Future {
+      println(s"checkIfUsersNeedPromptToLogWeightEvent is called for userIds $userIds")
+      userIds.map { currentUserId =>
+        userRepository
+          .getFitnessUserProfile(currentUserId)
+          .map {
+            case Some(profile) =>
+              val lastUpdatedAtDate = DateTimeFormatter
+                .ofPattern("yyyy-MM-dd")
+                .format(LocalDateTime.ofInstant(profile.updatedAt, ZoneOffset.UTC))
+              val todaysDate = DateTimeFormatter
+                .ofPattern("yyyy-MM-dd")
+                .format(LocalDateTime.ofInstant(Instant.now, ZoneOffset.UTC))
+
+              if (lastUpdatedAtDate != todaysDate)
+                messageBusService.publishNotifyUserToPromptForWeightEntry(currentUserId)
+
+            case None => ()
+          }
+      }
+    }
 
   def getAllExerciseInfo: Future[Either[DomainError, Seq[ExerciseDefinition]]] =
     exerciseService.getCompleteExerciseDetailedInfo
