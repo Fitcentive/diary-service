@@ -33,12 +33,16 @@ class DiaryApi @Inject() (
   // --------------------------------
   // Exercise Diary API methods
   // --------------------------------
-  def insertCardioDiaryEntry(userId: UUID, create: CardioWorkout.Create): Future[CardioWorkout] =
+  def insertCardioDiaryEntry(userId: UUID, create: CardioWorkout.Create, offsetInMinutes: Int): Future[CardioWorkout] =
     for {
       c <-
         exerciseDiaryRepository
           .insertCardioWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
-      entryDate = LocalDateTime.ofInstant(c.cardioDate, ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE)
+      entryDate =
+        LocalDateTime
+          .ofInstant(c.cardioDate, ZoneOffset.UTC)
+          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, c.durationInMinutes)
     } yield c
 
@@ -119,13 +123,21 @@ class DiaryApi @Inject() (
       _ <- meetupService.deleteCardioEntryAssociatedToMeetup(cardioWorkoutEntryId)
     } yield ()
 
-  def insertStrengthDiaryEntry(userId: UUID, create: StrengthWorkout.Create): Future[StrengthWorkout] =
+  def insertStrengthDiaryEntry(
+    userId: UUID,
+    create: StrengthWorkout.Create,
+    offsetInMinutes: Int
+  ): Future[StrengthWorkout] =
     for {
       s <-
         exerciseDiaryRepository
           .insertStrengthWorkoutForUser(id = UUID.randomUUID(), userId = userId, create = create)
       activityMinutes = calculateActivityMinutes(s.sets.getOrElse(0), s.reps.getOrElse(0))
-      entryDate = LocalDateTime.ofInstant(s.exerciseDate, ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE)
+      entryDate =
+        LocalDateTime
+          .ofInstant(s.exerciseDate, ZoneOffset.UTC)
+          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, Some(activityMinutes))
     } yield s
 
@@ -325,12 +337,16 @@ class DiaryApi @Inject() (
       }
     } yield entry).value
 
-  def insertFoodDiaryEntry(userId: UUID, create: FoodEntry.Create): Future[FoodEntry] =
+  def insertFoodDiaryEntry(userId: UUID, create: FoodEntry.Create, offsetInMinutes: Int): Future[FoodEntry] =
     for {
       f <-
         foodDiaryRepository
           .insertFoodDiaryEntry(id = UUID.randomUUID(), userId = userId, create = create)
-      entryDate = LocalDateTime.ofInstant(f.entryDate, ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE)
+      entryDate =
+        LocalDateTime
+          .ofInstant(f.entryDate, ZoneOffset.UTC)
+          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, None)
     } yield f
 

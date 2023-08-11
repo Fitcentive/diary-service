@@ -36,12 +36,12 @@ class UserController @Inject() (
       }
     }
 
-  def upsertUserFitnessProfile(implicit userId: UUID): Action[AnyContent] =
+  def upsertUserFitnessProfile(implicit userId: UUID, offsetInMinutes: Int): Action[AnyContent] =
     userAuthAction.async { implicit userRequest =>
       rejectIfNotEntitled {
         validateJson[FitnessUserProfile.Update](userRequest.request.body.asJson) { userProfileUpdate =>
           userApi
-            .upsertUserFitnessProfile(userId, userProfileUpdate)
+            .upsertUserFitnessProfile(userId, userProfileUpdate, offsetInMinutes)
             .map(userProfile => Ok(Json.toJson(userProfile)))
             .recover(resultErrorAsyncHandler)
         }

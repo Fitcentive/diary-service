@@ -73,12 +73,12 @@ class DiaryController @Inject() (
       }(request, userId)
     }
 
-  def addCardioEntryToDiary(implicit userId: UUID): Action[AnyContent] =
+  def addCardioEntryToDiary(implicit userId: UUID, offsetInMinutes: Int): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
         validateJson[CardioWorkout.Create](request.body.asJson) { createPayload =>
           diaryApi
-            .insertCardioDiaryEntry(userId, createPayload)
+            .insertCardioDiaryEntry(userId, createPayload, offsetInMinutes)
             .map(cardio => Ok(Json.toJson(cardio)))
             .recover(resultErrorAsyncHandler)
         }
@@ -95,12 +95,12 @@ class DiaryController @Inject() (
       }(request, userId)
     }
 
-  def addStrengthEntryToDiary(implicit userId: UUID): Action[AnyContent] =
+  def addStrengthEntryToDiary(implicit userId: UUID, offsetInMinutes: Int): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
         validateJson[StrengthWorkout.Create](request.body.asJson) { createPayload =>
           diaryApi
-            .insertStrengthDiaryEntry(userId, createPayload)
+            .insertStrengthDiaryEntry(userId, createPayload, offsetInMinutes)
             .map(cardio => Ok(Json.toJson(cardio)))
             .recover(resultErrorAsyncHandler)
         }
@@ -262,12 +262,12 @@ class DiaryController @Inject() (
       }(request, userId)
     }
 
-  def addFoodEntryToDiary(implicit userId: UUID): Action[AnyContent] =
+  def addFoodEntryToDiary(implicit userId: UUID, offsetInMinutes: Int): Action[AnyContent] =
     userAuthAction.async { implicit request =>
       rejectIfNotEntitled {
         validateJson[FoodEntry.Create](request.body.asJson) { createPayload =>
           diaryApi
-            .insertFoodDiaryEntry(userId, createPayload)
+            .insertFoodDiaryEntry(userId, createPayload, offsetInMinutes)
             .map(cardio => Ok(Json.toJson(cardio)))
             .recover(resultErrorAsyncHandler)
         }

@@ -7,6 +7,7 @@ import io.fitcentive.sdk.error.{DomainError, EntityNotFoundError}
 
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,10 +25,18 @@ class UserApi @Inject() (
       .getFitnessUserProfile(userId)
       .map(_.map(Right.apply).getOrElse(Left(EntityNotFoundError("No user fitness profile found!"))))
 
-  def upsertUserFitnessProfile(userId: UUID, update: FitnessUserProfile.Update): Future[FitnessUserProfile] =
+  def upsertUserFitnessProfile(
+    userId: UUID,
+    update: FitnessUserProfile.Update,
+    offsetInMinutes: Int
+  ): Future[FitnessUserProfile] =
     for {
       updatedProfile <- userRepository.upsertFitnessUserProfile(userId, update)
-      entryDate = LocalDateTime.ofInstant(Instant.now, ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE)
+      entryDate =
+        LocalDateTime
+          .ofInstant(Instant.now, ZoneOffset.UTC)
+          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserWeightUpdatedEvent(userId, entryDate, updatedProfile.weightInLbs)
     } yield updatedProfile
 

@@ -18,14 +18,14 @@ GET      /api/diary/user/:userId/month/:dateString                              
 POST      /api/diary/user/:userId/meetup/:meetupId                                              io.fitcentive.diary.controllers.DiaryController.associateDiaryEntriesToMeetup(userId: java.util.UUID, meetupId: java.util.UUID)
 
 # Cardio workout endpoints
-POST     /api/diary/user/:userId/cardio                                                         io.fitcentive.diary.controllers.DiaryController.addCardioEntryToDiary(userId: java.util.UUID)
+POST     /api/diary/user/:userId/cardio                                                         io.fitcentive.diary.controllers.DiaryController.addCardioEntryToDiary(userId: java.util.UUID, offsetInMinutes: Int)
 GET      /api/diary/user/:userId/cardio/:cardioEntryId                                          io.fitcentive.diary.controllers.DiaryController.getCardioDiaryEntry(userId: java.util.UUID, cardioEntryId: java.util.UUID)
 PUT      /api/diary/user/:userId/cardio/:cardioEntryId                                          io.fitcentive.diary.controllers.DiaryController.updateCardioDiaryEntry(userId: java.util.UUID, cardioEntryId: java.util.UUID)
 DELETE   /api/diary/user/:userId/cardio/:cardioEntryId                                          io.fitcentive.diary.controllers.DiaryController.deleteCardioEntryFromDiary(userId: java.util.UUID, cardioEntryId: java.util.UUID)
 GET      /api/diary/user/:userId/date/:dateString/cardio                                        io.fitcentive.diary.controllers.DiaryController.getAllCardioWorkoutsForUserByDay(userId: java.util.UUID, dateString: String, offsetInMinutes: Int)
 
 # Strength workout endpoints
-POST     /api/diary/user/:userId/strength                                                       io.fitcentive.diary.controllers.DiaryController.addStrengthEntryToDiary(userId: java.util.UUID)
+POST     /api/diary/user/:userId/strength                                                       io.fitcentive.diary.controllers.DiaryController.addStrengthEntryToDiary(userId: java.util.UUID, offsetInMinutes: Int)
 GET      /api/diary/user/:userId/strength/:strengthEntryId                                      io.fitcentive.diary.controllers.DiaryController.getStrengthDiaryEntry(userId: java.util.UUID, strengthEntryId: java.util.UUID)
 PUT      /api/diary/user/:userId/strength/:strengthEntryId                                      io.fitcentive.diary.controllers.DiaryController.updateStrengthDiaryEntry(userId: java.util.UUID, strengthEntryId: java.util.UUID)
 DELETE   /api/diary/user/:userId/strength/:strengthEntryId                                      io.fitcentive.diary.controllers.DiaryController.deleteStrengthEntryFromDiary(userId: java.util.UUID, strengthEntryId: java.util.UUID)
@@ -36,7 +36,7 @@ GET      /api/diary/user/:userId/recently-viewed-workouts                       
 POST     /api/diary/user/:userId/recently-viewed-workouts                                       io.fitcentive.diary.controllers.DiaryController.addUserMostRecentlyViewedWorkout(userId: java.util.UUID)
 
 # Food entry endpoints
-POST     /api/diary/user/:userId/food                                                           io.fitcentive.diary.controllers.DiaryController.addFoodEntryToDiary(userId: java.util.UUID)
+POST     /api/diary/user/:userId/food                                                           io.fitcentive.diary.controllers.DiaryController.addFoodEntryToDiary(userId: java.util.UUID, offsetInMinutes: Int)
 GET      /api/diary/user/:userId/food/:foodEntryId                                              io.fitcentive.diary.controllers.DiaryController.getFoodDiaryEntry(userId: java.util.UUID, foodEntryId: java.util.UUID)
 PUT      /api/diary/user/:userId/food/:foodEntryId                                              io.fitcentive.diary.controllers.DiaryController.updateFoodDiaryEntry(userId: java.util.UUID, foodEntryId: java.util.UUID)
 DELETE   /api/diary/user/:userId/food/:foodEntryId                                              io.fitcentive.diary.controllers.DiaryController.deleteFoodEntryFromDiary(userId: java.util.UUID, foodEntryId: java.util.UUID)
@@ -54,7 +54,7 @@ GET      /api/diary/food/search/autocomplete                                    
 
 # Fitness user profile
 GET      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.getUserFitnessProfile(userId: java.util.UUID)
-PUT      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.upsertUserFitnessProfile(userId: java.util.UUID)
+PUT      /api/diary/user/:userId/profile                                                        io.fitcentive.diary.controllers.UserController.upsertUserFitnessProfile(userId: java.util.UUID, offsetInMinutes: Int)
 
 # User steps data
 GET      /api/diary/user/:userId/steps                                                          io.fitcentive.diary.controllers.DiaryController.getUserStepsData(userId: java.util.UUID, dateString: String)
