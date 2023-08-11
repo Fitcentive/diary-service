@@ -95,6 +95,14 @@ class AnormFoodDiaryRepository @Inject() (val db: Database)(implicit val dbec: D
       }
     }
 
+  override def getCountOfFoodEntriesForDayByUser(userId: UUID, windowStart: Instant, windowEnd: Instant): Future[Int] =
+    Future {
+      executeSqlWithExpectedReturn(
+        SQL_GET_FOOD_ENTRIES_COUNT_FOR_USER_BY_DATE,
+        Seq("userId" -> userId, "windowStart" -> windowStart, "windowEnd" -> windowEnd)
+      )(SqlParser.scalar[Int])
+    }
+
   override def getAllFoodEntriesForDayByUser(
     userId: UUID,
     windowStart: Instant,
@@ -219,6 +227,15 @@ object AnormFoodDiaryRepository extends AnormOps {
   private val SQL_GET_FOOD_ENTRIES_FOR_USER_BY_DATE: String =
     """
       |select * 
+      |from food_entries
+      |where user_id = {userId}::uuid
+      |and entry_date >= {windowStart} 
+      |and entry_date <= {windowEnd} ;
+      |""".stripMargin
+
+  private val SQL_GET_FOOD_ENTRIES_COUNT_FOR_USER_BY_DATE: String =
+    """
+      |select count(*) 
       |from food_entries
       |where user_id = {userId}::uuid
       |and entry_date >= {windowStart} 

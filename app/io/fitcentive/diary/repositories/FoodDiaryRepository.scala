@@ -15,6 +15,7 @@ trait FoodDiaryRepository {
   def associateMeetupWithFoodEntryById(foodEntryId: UUID, meetupId: UUID): Future[Unit]
   def dissociateMeetupFromFoodEntryById(foodEntryId: UUID): Future[Unit]
   def getAllFoodEntriesForDayByUser(userId: UUID, windowStart: Instant, windowEnd: Instant): Future[Seq[FoodEntry]]
+  def getCountOfFoodEntriesForDayByUser(userId: UUID, windowStart: Instant, windowEnd: Instant): Future[Int]
   def getFoodEntryForUserById(userId: UUID, foodDiaryEntryId: UUID): Future[Option[FoodEntry]]
   def getFoodEntriesByIds(foodDiaryEntryIds: Seq[UUID]): Future[Seq[FoodEntry]]
   def updateFoodEntryForUserById(userId: UUID, foodDiaryEntryId: UUID, update: FoodEntry.Update): Future[FoodEntry]

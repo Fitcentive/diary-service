@@ -30,6 +30,7 @@ trait ExerciseDiaryRepository {
     windowStart: Instant,
     windowEnd: Instant
   ): Future[Seq[CardioWorkout]]
+  def getCountOfCardioWorkoutsForDayByUser(userId: UUID, windowStart: Instant, windowEnd: Instant): Future[Int]
   def insertCardioWorkoutForUser(id: UUID, userId: UUID, create: exercise.CardioWorkout.Create): Future[CardioWorkout]
   def deleteCardioWorkoutForUser(userId: UUID, id: UUID): Future[Unit]
   def getAllStrengthWorkoutsForDayByUser(
@@ -37,6 +38,7 @@ trait ExerciseDiaryRepository {
     windowStart: Instant,
     windowEnd: Instant
   ): Future[Seq[StrengthWorkout]]
+  def getCountOfStrengthWorkoutsForDayByUser(userId: UUID, windowStart: Instant, windowEnd: Instant): Future[Int]
   def insertStrengthWorkoutForUser(id: UUID, userId: UUID, create: StrengthWorkout.Create): Future[StrengthWorkout]
   def deleteStrengthWorkoutForUser(userId: UUID, id: UUID): Future[Unit]
   def deleteAllCardioWorkoutsForUser(userId: UUID): Future[Unit]

@@ -1,7 +1,12 @@
 package io.fitcentive.diary.infrastructure.pubsub
 
 import io.fitcentive.diary.domain.config.AppPubSubConfig
-import io.fitcentive.diary.domain.events.{CheckIfUsersNeedPromptToLogWeightEvent, EventHandlers, WarmWgerApiCacheEvent}
+import io.fitcentive.diary.domain.events.{
+  CheckIfUsersNeedPromptToLogDiaryEntriesEvent,
+  CheckIfUsersNeedPromptToLogWeightEvent,
+  EventHandlers,
+  WarmWgerApiCacheEvent
+}
 import io.fitcentive.diary.infrastructure.contexts.PubSubExecutionContext
 import io.fitcentive.sdk.gcp.pubsub.{PubSubPublisher, PubSubSubscriber}
 import io.fitcentive.sdk.logging.AppLogger
@@ -26,10 +31,19 @@ class SubscriptionManager(
       _ <- Future.sequence(config.topicsConfig.topics.map(publisher.createTopic))
       _ <- subscribeToWgerCacheEvent
       _ <- subscribeToCheckIfUsersNeedPromptToLogWeightEvent
+      _ <- subscribeToCheckIfUsersNeedPromptToLogDiaryEntriesEvent
 
       _ = logInfo("Subscriptions set up successfully!")
     } yield ()
   }
+
+  def subscribeToCheckIfUsersNeedPromptToLogDiaryEntriesEvent: Future[Unit] =
+    subscriber
+      .subscribe[CheckIfUsersNeedPromptToLogDiaryEntriesEvent](
+        environment,
+        config.subscriptionsConfig.checkIfUsersNeedPromptToLogDiaryEntriesSubscription,
+        config.topicsConfig.checkIfUsersNeedPromptToLogDiaryEntriesTopic
+      )(_.payload.pipe(handleEvent))
 
   def subscribeToCheckIfUsersNeedPromptToLogWeightEvent: Future[Unit] =
     subscriber

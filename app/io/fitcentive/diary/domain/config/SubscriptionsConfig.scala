@@ -5,9 +5,14 @@ import io.fitcentive.sdk.config.PubSubSubscriptionConfig
 
 case class SubscriptionsConfig(
   warmWgerApiCacheSubscription: String,
-  checkIfUsersNeedPromptToLogWeightSubscription: String
+  checkIfUsersNeedPromptToLogWeightSubscription: String,
+  checkIfUsersNeedPromptToLogDiaryEntriesSubscription: String,
 ) extends PubSubSubscriptionConfig {
-  val subscriptions: Seq[String] = Seq(warmWgerApiCacheSubscription, checkIfUsersNeedPromptToLogWeightSubscription)
+  val subscriptions: Seq[String] = Seq(
+    warmWgerApiCacheSubscription,
+    checkIfUsersNeedPromptToLogWeightSubscription,
+    checkIfUsersNeedPromptToLogDiaryEntriesSubscription
+  )
 }
 
 object SubscriptionsConfig {
@@ -15,5 +20,6 @@ object SubscriptionsConfig {
     SubscriptionsConfig(
       config.getString("warm-wger-api-cache"),
       config.getString("check-if-users-need-prompt-to-log-weight"),
+      config.getString("check-if-users-need-prompt-to-log-diary-entries"),
     )
 }

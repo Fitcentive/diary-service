@@ -9,7 +9,9 @@ case class TopicsConfig(
   userDiaryEntryCreatedTopic: String,
   userWeightUpdatedTopic: String,
   checkIfUsersNeedPromptToLogWeightTopic: String,
+  checkIfUsersNeedPromptToLogDiaryEntriesTopic: String,
   promptUserToLogWeightTopic: String,
+  promptUserToLogDiaryEntryTopic: String,
 ) extends PubSubTopicConfig {
 
   val topics: Seq[String] =
@@ -19,7 +21,9 @@ case class TopicsConfig(
       userDiaryEntryCreatedTopic,
       userWeightUpdatedTopic,
       checkIfUsersNeedPromptToLogWeightTopic,
-      promptUserToLogWeightTopic
+      checkIfUsersNeedPromptToLogDiaryEntriesTopic,
+      promptUserToLogWeightTopic,
+      promptUserToLogDiaryEntryTopic
     )
 
 }
@@ -32,6 +36,8 @@ object TopicsConfig {
       config.getString("user-diary-entry-created"),
       config.getString("user-weight-updated"),
       config.getString("check-if-users-need-prompt-to-log-weight"),
+      config.getString("check-if-users-need-prompt-to-log-diary-entries"),
       config.getString("prompt-user-to-log-weight"),
+      config.getString("prompt-user-to-log-diary-entry"),
     )
 }

@@ -116,6 +116,8 @@ spec:
               value: "warm-wger-api-cache"
             - name: SUBSCRIPTION_CHECK_IF_USERS_NEED_PROMPT_TO_LOG_WEIGHT
               value: "check-if-users-need-prompt-to-log-weight"
+            - name: SUBSCRIPTION_CHECK_IF_USERS_NEED_PROMPT_TO_LOG_DIARY_ENTRIES
+              value: "check-if-users-need-prompt-to-log-diary-entries"
             - name: TOPIC_USER_STEP_DATA_UPDATED
               value: "user-step-data-updated"
             - name: TOPIC_USER_DIARY_ENTRY_CREATED
@@ -124,8 +126,12 @@ spec:
               value: "user-weight-updated"
             - name: TOPIC_CHECK_IF_USERS_NEED_PROMPT_TO_LOG_WEIGHT
               value: "check-if-users-need-prompt-to-log-weight"
+            - name: TOPIC_CHECK_IF_USERS_NEED_PROMPT_TO_LOG_DIARY_ENTRIES
+              value: "check-if-users-need-prompt-to-log-diary-entries"
             - name: TOPIC_PROMPT_USER_TO_LOG_WEIGHT
               value: "prompt-user-to-log-weight"
+            - name: TOPIC_PROMPT_USER_TO_LOG_DIARY_ENTRY
+              value: "prompt-user-to-log-diary-entry"
       volumes:
         - name: cloudsql-creds
           secret:

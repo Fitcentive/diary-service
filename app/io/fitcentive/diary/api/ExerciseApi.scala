@@ -3,19 +3,23 @@ package io.fitcentive.diary.api
 import cats.data.EitherT
 import io.fitcentive.sdk.error.{DomainError, EntityNotFoundError}
 import io.fitcentive.diary.domain.wger.ExerciseDefinition
-import io.fitcentive.diary.repositories.UserRepository
+import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepository, UserRepository}
 import io.fitcentive.diary.services._
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.scalaUtilChainingOps
 
 @Singleton
 class ExerciseApi @Inject() (
   exerciseService: ExerciseService,
   userRepository: UserRepository,
+  exerciseDiaryRepository: ExerciseDiaryRepository,
+  foodDiaryRepository: FoodDiaryRepository,
   messageBusService: MessageBusService,
 )(implicit ec: ExecutionContext) {
 
@@ -23,6 +27,8 @@ class ExerciseApi @Inject() (
 
   val defaultLimit = 50
   val defaultOffset = 0
+
+  val ESToffsetInMinutes = 240;
 
   def getExerciseInfoForWorkoutId(workoutId: UUID): Future[Either[DomainError, ExerciseDefinition]] =
     (for {
@@ -38,9 +44,35 @@ class ExerciseApi @Inject() (
     } yield exerciseDefinition).value
 
   // Wrap in future to ACK pubsub message immediately
+  // todo - currently, we do for EST by harcoding offset. Ideally, we want to consume user data based on their timezone offset
+  def checkIfUsersNeedPromptToLogDiaryEntriesEvent(userIds: Seq[UUID]): Future[Unit] =
+    Future {
+      val windowStart = DateTimeFormatter
+        .ofPattern("yyyy-MM-dd")
+        .format(LocalDateTime.ofInstant(Instant.now, ZoneOffset.UTC))
+        .pipe(d => LocalDate.parse(d).atStartOfDay().toInstant(ZoneOffset.UTC))
+        .plus(-ESToffsetInMinutes, ChronoUnit.MINUTES)
+      val windowEnd = windowStart.plus(1, ChronoUnit.DAYS)
+
+      userIds.map { currentUserId =>
+        (for {
+          foodDiaryEntriesCount <-
+            foodDiaryRepository.getCountOfFoodEntriesForDayByUser(currentUserId, windowStart, windowEnd)
+          cardioDiaryEntryCount <-
+            exerciseDiaryRepository.getCountOfCardioWorkoutsForDayByUser(currentUserId, windowStart, windowEnd)
+          strengthDiaryEntryCount <-
+            exerciseDiaryRepository.getCountOfStrengthWorkoutsForDayByUser(currentUserId, windowStart, windowEnd)
+        } yield foodDiaryEntriesCount + cardioDiaryEntryCount + strengthDiaryEntryCount)
+          .map { count =>
+            if (count == 0)
+              messageBusService.publishNotifyUserToPromptForDiaryEntry(currentUserId)
+          }
+      }
+    }
+
+  // Wrap in future to ACK pubsub message immediately
   def checkIfUsersNeedPromptToLogWeightEvent(userIds: Seq[UUID]): Future[Unit] =
     Future {
-      println(s"checkIfUsersNeedPromptToLogWeightEvent is called for userIds $userIds")
       userIds.map { currentUserId =>
         userRepository
           .getFitnessUserProfile(currentUserId)

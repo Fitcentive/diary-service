@@ -142,6 +142,18 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
       ).map(_.toDomain)
     }
 
+  override def getCountOfCardioWorkoutsForDayByUser(
+    userId: UUID,
+    windowStart: Instant,
+    windowEnd: Instant
+  ): Future[Int] =
+    Future {
+      executeSqlWithExpectedReturn(
+        SQL_GET_CARDIO_WORKOUTS_COUNT_FOR_USER_BY_DATE,
+        Seq("userId" -> userId, "windowStart" -> windowStart, "windowEnd" -> windowEnd)
+      )(SqlParser.scalar[Int])
+    }
+
   override def getAllCardioWorkoutsForDayByUser(
     userId: UUID,
     windowStart: Instant,
@@ -174,6 +186,18 @@ class AnormExerciseDiaryRepository @Inject() (val db: Database)(implicit val dbe
           )
         )(cardioWorkoutRowParser).toDomain
       }
+    }
+
+  override def getCountOfStrengthWorkoutsForDayByUser(
+    userId: UUID,
+    windowStart: Instant,
+    windowEnd: Instant
+  ): Future[Int] =
+    Future {
+      executeSqlWithExpectedReturn(
+        SQL_GET_STRENGTH_WORKOUTS_COUNT_FOR_USER_BY_DATE,
+        Seq("userId" -> userId, "windowStart" -> windowStart, "windowEnd" -> windowEnd)
+      )(SqlParser.scalar[Int])
     }
 
   override def getAllStrengthWorkoutsForDayByUser(
@@ -317,6 +341,15 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |and exercise_date <= {windowEnd} ;
       |""".stripMargin
 
+  private val SQL_GET_STRENGTH_WORKOUTS_COUNT_FOR_USER_BY_DATE: String =
+    """
+      |select count(*)
+      |from strength_workouts
+      |where user_id = {userId}::uuid
+      |and exercise_date >= {windowStart}
+      |and exercise_date <= {windowEnd} ;
+      |""".stripMargin
+
   private val SQL_DELETE_ALL_USER_STEP_DATA: String =
     """
       |delete from steps_taken
@@ -348,6 +381,15 @@ object AnormExerciseDiaryRepository extends AnormOps {
       |insert into cardio_workouts (id, user_id, workout_id, name, cardio_date, duration_in_minutes, calories_burned, meetup_id, created_at, updated_at)
       |values ({id}::uuid, {userId}::uuid, {workoutId}::uuid, {name}, {cardioDate}, {durationInMinutes}, {caloriesBurned}, {meetupId}::uuid, {now}, {now})
       |returning *;
+      |""".stripMargin
+
+  private val SQL_GET_CARDIO_WORKOUTS_COUNT_FOR_USER_BY_DATE: String =
+    """
+    |select count(*)
+    |from cardio_workouts
+    |where user_id = {userId}::uuid
+    |and cardio_date >= {windowStart} 
+    |and cardio_date <= {windowEnd} ;
       |""".stripMargin
 
   private val SQL_GET_CARDIO_WORKOUTS_FOR_USER_BY_DATE: String =
