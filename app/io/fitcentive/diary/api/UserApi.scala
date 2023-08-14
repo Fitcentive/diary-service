@@ -5,7 +5,7 @@ import io.fitcentive.diary.repositories.{ExerciseDiaryRepository, FoodDiaryRepos
 import io.fitcentive.diary.services.MessageBusService
 import io.fitcentive.sdk.error.{DomainError, EntityNotFoundError}
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -35,7 +35,7 @@ class UserApi @Inject() (
       entryDate =
         LocalDateTime
           .ofInstant(Instant.now, ZoneOffset.UTC)
-          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .plus(offsetInMinutes, ChronoUnit.MINUTES)
           .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserWeightUpdatedEvent(userId, entryDate, updatedProfile.weightInLbs)
     } yield updatedProfile

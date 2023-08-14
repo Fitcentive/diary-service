@@ -41,7 +41,7 @@ class DiaryApi @Inject() (
       entryDate =
         LocalDateTime
           .ofInstant(c.cardioDate, ZoneOffset.UTC)
-          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .plus(offsetInMinutes, ChronoUnit.MINUTES)
           .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, c.durationInMinutes)
     } yield c
@@ -136,7 +136,7 @@ class DiaryApi @Inject() (
       entryDate =
         LocalDateTime
           .ofInstant(s.exerciseDate, ZoneOffset.UTC)
-          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .plus(offsetInMinutes, ChronoUnit.MINUTES)
           .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, Some(activityMinutes))
     } yield s
@@ -345,7 +345,7 @@ class DiaryApi @Inject() (
       entryDate =
         LocalDateTime
           .ofInstant(f.entryDate, ZoneOffset.UTC)
-          .plus(-offsetInMinutes, ChronoUnit.MINUTES)
+          .plus(offsetInMinutes, ChronoUnit.MINUTES)
           .format(DateTimeFormatter.ISO_LOCAL_DATE)
       _ <- messageBusService.publishUserDiaryEntryCreatedEvent(userId, entryDate, None)
     } yield f

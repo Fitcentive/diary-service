@@ -71,6 +71,7 @@ class ExerciseApi @Inject() (
     }
 
   // Wrap in future to ACK pubsub message immediately
+  // todo - currently, we do not account for timezone offset here while viewing when user updated fitness profile
   def checkIfUsersNeedPromptToLogWeightEvent(userIds: Seq[UUID]): Future[Unit] =
     Future {
       userIds.map { currentUserId =>
