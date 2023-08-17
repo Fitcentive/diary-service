@@ -8,6 +8,7 @@ import io.fitcentive.diary.domain.fatsecret.{
   FoodGetResult,
   FoodGetResultSingleServing,
   FoodSearchResults,
+  FoodSearchResultsOut,
   FoodSearchSuggestions
 }
 import io.fitcentive.diary.infrastructure.rest.RestFatsecretApiService
@@ -29,12 +30,10 @@ class NutritionApi @Inject() (nutritionService: NutritionService, foodDiaryRepos
     query: String,
     pageNumber: Option[Int],
     maxResults: Option[Int]
-  ): Future[Either[DomainError, FoodSearchResults]] =
-    nutritionService.searchFoods(
-      query,
-      pageNumber.fold(0)(identity),
-      maxResults.fold(RestFatsecretApiService.defaultMax)(identity)
-    )
+  ): Future[Either[DomainError, FoodSearchResultsOut]] =
+    nutritionService
+      .searchFoods(query, pageNumber.fold(0)(identity), maxResults.fold(RestFatsecretApiService.defaultMax)(identity))
+      .map(_.map(_.toOut))
 
   def getFoodsByIds(
     foodIds: Seq[String]
